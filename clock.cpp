@@ -62,29 +62,7 @@ float angleAtTime(float t){
     return MAX_ANGLE * cosf(OMEGA * t);
 }
 
-void display(){
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    drawCircle(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_RADIUS, false);
-    drawCircle(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_OUTER_RADIUS, false);
-
-    float jointCenterX = CLOCK_CENTER_X;
-    float jointCenterY = CLOCK_CENTER_Y - CLOCK_OUTER_RADIUS;
-
-    drawCircle(jointCenterX, jointCenterY, JOINT_RADIUS, true);
-
-
-    float angle = angleAtTime((float)time_ / 1000.) ;
-    // std :: cout << time_ << " " << angle << "\n";
-    float bobCenterX = xFromAngle(angle - M_PI / 2, ROD_LEN,CLOCK_CENTER_X);
-    float bobCenterY = yFromAngle(angle - M_PI / 2, ROD_LEN,CLOCK_CENTER_Y - CLOCK_OUTER_RADIUS);
-    drawCircle(
-        bobCenterX,
-        bobCenterY,
-        BOB_RADIUS, 
-        true
-    );
-    
+void drawRod(float angle, float jointCenterX, float jointCenterY, float bobCenterX, float bobCenterY){
     float rodC1x = xFromAngle(angle, ROD_WIDTH / 2, jointCenterX);
     float rodC1y = yFromAngle(angle , ROD_WIDTH / 2, jointCenterY);
 
@@ -112,6 +90,68 @@ void display(){
         // glVertex2f(CLOCK_CENTER_X, CLOCK_CENTER_Y - CLOCK_OUTER_RADIUS);
 
     glEnd();
+
+}
+
+void drawClock(float angle){
+    drawCircle(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_RADIUS, false);
+    drawCircle(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_OUTER_RADIUS, false);
+
+    double tickAngle = 0;
+    double w = SMALL_TICK;
+    glBegin(GL_LINES);
+        for(int i = 0; i < 12; ++i){
+        
+            tickAngle += (M_PI / 6);
+            
+            if((i + 1) % 3 == 0){
+                w = LARGE_TICK;
+            }
+            else{
+                w = SMALL_TICK;
+            }
+
+            glVertex2f(
+                xFromAngle(tickAngle,CLOCK_RADIUS,CLOCK_CENTER_X),
+                yFromAngle(tickAngle, CLOCK_RADIUS, CLOCK_CENTER_Y)
+            );
+
+
+            glVertex2f(
+                xFromAngle(tickAngle,CLOCK_RADIUS - w,CLOCK_CENTER_X),
+                yFromAngle(tickAngle, CLOCK_RADIUS - w, CLOCK_CENTER_Y)
+            );
+        }
+
+    glEnd();
+
+}
+
+void display(){
+    glClear(GL_COLOR_BUFFER_BIT);
+
+
+    float jointCenterX = CLOCK_CENTER_X;
+    float jointCenterY = CLOCK_CENTER_Y - CLOCK_OUTER_RADIUS;
+
+    drawCircle(jointCenterX, jointCenterY, JOINT_RADIUS, true);
+
+
+    float angle = angleAtTime((float)time_ / 1000.) ;
+    // std :: cout << time_ << " " << angle << "\n";
+    float bobCenterX = xFromAngle(angle - M_PI / 2, ROD_LEN,CLOCK_CENTER_X);
+    float bobCenterY = yFromAngle(angle - M_PI / 2, ROD_LEN,CLOCK_CENTER_Y - CLOCK_OUTER_RADIUS);
+    drawCircle(
+        bobCenterX,
+        bobCenterY,
+        BOB_RADIUS, 
+        true
+    );
+    
+    drawRod(angle, jointCenterX, jointCenterY, bobCenterX, bobCenterY);
+
+    drawClock(angle);
+
 
     glFlush();
 }
