@@ -1,7 +1,6 @@
 #include <GL/glut.h>
 #include <math.h>
 #include <iostream>
-#include <chrono>
 #include <ctime>
 
 // clock circles
@@ -9,6 +8,7 @@ const float CLOCK_CENTER_X = 0.0f;
 const float CLOCK_CENTER_Y = 0.3f;
 const float CLOCK_RADIUS = .4f;
 const float CLOCK_OUTER_RADIUS = .5f;
+const float CENTER_KNOB_W = .02f;
 
 // ticks
 const float LARGE_TICK = .1f;
@@ -24,13 +24,13 @@ const float MAX_ANGLE = (M_PI) / 4;
 const float OMEGA = M_PI;
 
 // hands
-const float HOUR_LEN = .1f;
+const float HOUR_LEN = .13f;
 const float H_TR_HEIGHT = .1f;
-const float HOUR_WIDTH = .03f;
+const float HOUR_WIDTH = .025f;
 
-const float MIN_LEN = .15f;
+const float MIN_LEN = .18f;
 const float M_TR_HEIGHT = .1f;
-const float MIN_WIDTH = .02f;
+const float MIN_WIDTH = .018f;
 
 const float SEC_LEN = .2;
 const float S_TR_HEIGHT = .1f;
@@ -189,6 +189,13 @@ void drawClock(){
 
     glEnd();
 
+    glBegin(GL_QUADS);
+        glVertex2f(-CENTER_KNOB_W + CLOCK_CENTER_X,-CENTER_KNOB_W + CLOCK_CENTER_Y);
+        glVertex2f(CENTER_KNOB_W + CLOCK_CENTER_X,-CENTER_KNOB_W + CLOCK_CENTER_Y);
+        glVertex2f(CENTER_KNOB_W + CLOCK_CENTER_X,CENTER_KNOB_W + CLOCK_CENTER_Y);
+        glVertex2f(-CENTER_KNOB_W + CLOCK_CENTER_X,CENTER_KNOB_W + CLOCK_CENTER_Y);
+    glEnd();
+
 }
 
 float getTimeAngle(float t, float div){
@@ -269,23 +276,16 @@ void drawHands(){
 
 }
 
+
 void display(){
     glClear(GL_COLOR_BUFFER_BIT);
-
     // pendulum
     drawPendulum();
-    
     // hands
-    
     drawHands();
-
+    // clock body
     drawClock();
 
-
-
-
-
-    // glFlush();
     glutSwapBuffers();
 }
 
