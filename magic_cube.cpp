@@ -9,7 +9,7 @@ void initGL() {
 }
 
 // Global variables
-GLfloat eyex = -1, eyey = 2, eyez = 2;
+GLfloat eyex = 1, eyey = 2, eyez = 2;
 GLfloat centerx = 0, centery = 0, centerz = 0;
 GLfloat upx = 0, upy = 1, upz = 0;
 bool isAxes = true, isCube = false, isPyramid = false;
@@ -24,6 +24,10 @@ float sideColors[][3] = {
     {1, 1, 1},
     {.5, 0, 1},
 };
+
+int rotAngle = 0;
+float scale = 1;
+double dist = (1.0 / 3);
 
 // float rotation
 
@@ -60,7 +64,6 @@ void drawTriangle(int colorIndex){
 
 void drawSide(int angle,float x, float y, float z,int colorIndex){
     glPushMatrix();
-        glScalef(.5, .5, .5);
         glRotatef(angle, x, y, z);
         drawTriangle(colorIndex);
     glPopMatrix();
@@ -81,18 +84,43 @@ void display() {
     gluLookAt(eyex,eyey,eyez,
               centerx,centery,centerz,
               upx,upy,upz);
+    
+    glPushMatrix();
+        glRotatef(rotAngle, 0, 1, 0);
     // draw
     // if (isAxes) drawAxes();
     // if (isCube) drawCube();
     // if (isPyramid) drawPyramid();
     // drawCube();
     drawAxes();
-    for(int i = 0; i < 4; ++i)
-        drawSide(i * 90, 0, 1, 0, i);
+    double dist = (1.0 / 3);
+
+    // glPushMatrix();
+    //     glScaled(1,1,1);
+    //     drawSide(0, 0, 1, 0, 0);
+    // glPopMatrix();
+
+
     glPushMatrix();
-        glRotatef(180, 1, 0, 0);
-        for(int i = 0; i < 4; ++i)
-            drawSide(i * 90, 0, 1, 0, i + 4);
+        glTranslatef(dist - scale * dist, dist - scale * dist, dist - scale * dist);
+        glScaled(scale,scale,scale);
+        drawSide(0, 0, 1, 0, 1);
+    glPopMatrix();
+
+    // glPushMatrix();
+    //     // glScalef(.5, .5, .5);
+    //     glScalef(scale,scale,scale);
+    //     for(int i = 0; i < 4; ++i)
+    //         drawSide(i * 90, 0, 1, 0, i);
+    // glPopMatrix();
+
+    // glPushMatrix();
+    //     glRotatef(180, 1, 0, 0);
+    //     glScalef(scale,scale,scale);
+    //     // glScalef(.5, .5, .5);
+    //     for(int i = 0; i < 4; ++i)
+    //         drawSide(i * 90, 0, 1, 0, i + 4);
+    // glPopMatrix();
     glPopMatrix();
     glutSwapBuffers();  // Render now
 }
@@ -121,6 +149,40 @@ void reshapeListener(GLsizei width, GLsizei height) {  // GLsizei for non-negati
     gluPerspective(45.0f, aspect, 0.1f, 100.0f);
 }
 
+
+/* Callback handler for normal-key event */
+void keyboard(unsigned char key, int x, int y) {
+    // key is the char pressed, e.g., 'a' or 27 for ESC
+    // (x, y) is the mouse location in Windows' coordinates
+    switch (key) {
+    case '.':
+        scale = fmin(scale + .1, 1);
+        break;
+    case ',':
+        scale = fmax(0, scale-.1);
+    
+    default:
+        break;
+    }
+    glutPostRedisplay();
+}
+
+
+void special(int key, int x, int y) {
+    // specialKey: GLUT_KEY_* (* for LEFT, RIGHT, UP, DOWN, HOME, END, PAGE_UP, PAGE_DOWN, F1,...F12). 
+    // (x, y) is the mouse location in Windows' coordinates
+    switch(key) {
+    case GLUT_KEY_LEFT:
+        rotAngle += 5;
+        break;
+    case GLUT_KEY_RIGHT:
+        rotAngle -= 5;
+        break;
+    }
+    glutPostRedisplay();
+}
+
+
 /* Main function: GLUT runs as a console application starting at main()  */
 int main(int argc, char** argv) {
     glutInit(&argc, argv);                      // Initialize GLUT
@@ -130,6 +192,8 @@ int main(int argc, char** argv) {
     glutCreateWindow("OpenGL 3D Drawing");      // Create a window with the given title
     glutDisplayFunc(display);                   // Register display callback handler for window re-paint
     glutReshapeFunc(reshapeListener);           // Register callback handler for window re-shape
+    glutKeyboardFunc(keyboard);
+    glutSpecialFunc(special);
     initGL();                                   // Our own OpenGL initialization
     glutMainLoop();                             // Enter the event-processing loop
     return 0;
