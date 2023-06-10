@@ -1,6 +1,9 @@
 #include <GL/glut.h>
 #include <math.h>
 #include <iostream>
+#include <chrono>
+#include <ctime>
+
 
 const float CLOCK_RADIUS = .4f;
 const float LARGE_TICK = .1f;
@@ -15,8 +18,15 @@ const float ANGLE_DELTA = (M_PI * 2) / 100;
 const float MAX_ANGLE = (M_PI) / 4;
 const float OMEGA = M_PI;
 const float ROD_WIDTH = .05f;
-const int INTERVAL = 30;
-
+const int INTERVAL = 40;
+const float HOUR_LEN = .3f;
+const float HOUR_WIDTH = .03f;
+const float MIN_LEN = .34f;
+const float MIN_WIDTH = .02f;
+const float SEC_LEN = .38;
+const float SEC_WIDTH = .015f;
+const float EPS = 1e-5;
+const float QUARTER = M_PI / 2 ;
 int time_ = 0;
 
 float xFromAngle(float angle, float radius, float ox){
@@ -62,21 +72,42 @@ float angleAtTime(float t){
     return MAX_ANGLE * cosf(OMEGA * t);
 }
 
-void drawRod(float angle, float jointCenterX, float jointCenterY, float bobCenterX, float bobCenterY){
-    float rodC1x = xFromAngle(angle, ROD_WIDTH / 2, jointCenterX);
-    float rodC1y = yFromAngle(angle , ROD_WIDTH / 2, jointCenterY);
+float getAngleIn2dCoord(float x1, float y1, float x2, float y2){
+    float angle;
+    float dy = y2 - y1;
+    float dx = x2 - x1;
+
+    if(abs(dx) <= EPS){
+        if(dy < 0){
+            angle = M_PI / 2;
+        }
+        else{
+            angle = -M_PI / 2;
+        }
+    }
+    else{
+        angle = atanf(dy / dx);
+    }
+    return angle;
+}
+
+void drawRod(float jointCenterX, float jointCenterY, float bobCenterX, float bobCenterY, float width){
+    float angle = getAngleIn2dCoord(jointCenterX, jointCenterY, bobCenterX, bobCenterY);
+    // std :: cout << "angle : " << angle << "\n";
+    float rodC1x = xFromAngle(angle - QUARTER , width / 2, jointCenterX);
+    float rodC1y = yFromAngle(angle - QUARTER , width / 2, jointCenterY);
 
 
-    float rodC2x = xFromAngle(angle + M_PI, ROD_WIDTH / 2, jointCenterX);
-    float rodC2y = yFromAngle(angle + M_PI, ROD_WIDTH / 2, jointCenterY);
+    float rodC2x = xFromAngle(angle + QUARTER, width / 2, jointCenterX);
+    float rodC2y = yFromAngle(angle + QUARTER, width / 2, jointCenterY);
 
 
-    float rodC3x = xFromAngle(angle, ROD_WIDTH / 2, bobCenterX);
-    float rodC3y = yFromAngle(angle , ROD_WIDTH / 2, bobCenterY);
+    float rodC3x = xFromAngle(angle - QUARTER, width / 2, bobCenterX);
+    float rodC3y = yFromAngle(angle - QUARTER, width / 2, bobCenterY);
 
 
-    float rodC4x = xFromAngle(angle + M_PI, ROD_WIDTH / 2, bobCenterX);
-    float rodC4y = yFromAngle(angle + M_PI, ROD_WIDTH / 2, bobCenterY);
+    float rodC4x = xFromAngle(angle + QUARTER, width / 2, bobCenterX);
+    float rodC4y = yFromAngle(angle + QUARTER, width / 2, bobCenterY);
 
 
 
@@ -127,9 +158,13 @@ void drawClock(float angle){
 
 }
 
+float getTimeAngle(float t, float div){
+    return QUARTER - t * (M_PI / div);
+}
 void display(){
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // pendulum
 
     float jointCenterX = CLOCK_CENTER_X;
     float jointCenterY = CLOCK_CENTER_Y - CLOCK_OUTER_RADIUS;
@@ -147,17 +182,63 @@ void display(){
         BOB_RADIUS, 
         true
     );
+    drawRod(jointCenterX, jointCenterY, bobCenterX, bobCenterY, ROD_WIDTH);
+
+    // hands
     
-    drawRod(angle, jointCenterX, jointCenterY, bobCenterX, bobCenterY);
+    std::time_t currentTime = std::time(nullptr);
+
+    std::tm* localTime = std::localtime(&currentTime);
+
+    int hour = localTime->tm_hour;
+    int minute = localTime->tm_min;
+    int second = localTime->tm_sec;
+
+    // std::cout << "hour : " << hour << "\n";
+
+    float hourAngle = getTimeAngle(hour + (float)minute/60.0f, 6);
+    // std:: cout << "hour angle " << hourAngle << "\n";
+
+    drawRod(
+        CLOCK_CENTER_X, 
+        CLOCK_CENTER_Y, 
+        xFromAngle(hourAngle ,HOUR_LEN, CLOCK_CENTER_X),
+        yFromAngle(hourAngle ,HOUR_LEN, CLOCK_CENTER_Y),
+        HOUR_WIDTH
+    );
+
+    float minuteAngle = getTimeAngle(minute + (float)second / 60.f, 30);
+    drawRod(
+        CLOCK_CENTER_X, 
+        CLOCK_CENTER_Y, 
+        xFromAngle(minuteAngle ,HOUR_LEN, CLOCK_CENTER_X),
+        yFromAngle(minuteAngle ,HOUR_LEN, CLOCK_CENTER_Y),
+        MIN_WIDTH
+    );
+
+    float secondAngle = getTimeAngle(second, 30);
+    drawRod(
+        CLOCK_CENTER_X, 
+        CLOCK_CENTER_Y, 
+        xFromAngle(secondAngle ,HOUR_LEN, CLOCK_CENTER_X),
+        yFromAngle(secondAngle ,HOUR_LEN, CLOCK_CENTER_Y),
+        MIN_WIDTH
+    );
+
 
     drawClock(angle);
 
 
-    glFlush();
+
+
+
+    // glFlush();
+    glutSwapBuffers();
 }
 
 int main(int argc, char** argv){
     glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE); 
     glutInitWindowSize(500, 500);
     glutInitWindowPosition(100, 100);
     glutCreateWindow("Clock");
