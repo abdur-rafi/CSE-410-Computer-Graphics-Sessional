@@ -25,7 +25,8 @@ float sideColors[][3] = {
     {.5, 0, 1},
 };
 
-int rotAngle = 0;
+int rotAngleZ = 0;
+int rotAngleX = 0;
 float scale = 1;
 double dist = (1.0 / 3);
 
@@ -62,9 +63,18 @@ void drawTriangle(int colorIndex){
     glEnd();
 }
 
-void drawSide(int angle,float x, float y, float z,int colorIndex){
+// void drawSide(int angle,float x, float y, float z,int colorIndex){
+//     glPushMatrix();
+//         glRotatef(angle, x, y, z);
+//         drawTriangle(colorIndex);
+//     glPopMatrix();
+// }
+
+void drawSide(int angle, float x, float y, float z, int colorIndex){
     glPushMatrix();
         glRotatef(angle, x, y, z);
+        glTranslatef(dist - scale * dist, dist - scale * dist, dist - scale * dist);
+        glScaled(scale,scale,scale);
         drawTriangle(colorIndex);
     glPopMatrix();
 }
@@ -86,7 +96,9 @@ void display() {
               upx,upy,upz);
     
     glPushMatrix();
-        glRotatef(rotAngle, 0, 1, 0);
+        glRotatef(rotAngleZ, 0, 1, 0);
+        glRotatef(rotAngleX, 1, 0, 0);
+
     // draw
     // if (isAxes) drawAxes();
     // if (isCube) drawCube();
@@ -100,12 +112,31 @@ void display() {
     //     drawSide(0, 0, 1, 0, 0);
     // glPopMatrix();
 
-
+    for(int i = 0; i < 4; ++i)
+        drawSide(i * 90, 0, 1, 0, i);
     glPushMatrix();
-        glTranslatef(dist - scale * dist, dist - scale * dist, dist - scale * dist);
-        glScaled(scale,scale,scale);
-        drawSide(0, 0, 1, 0, 1);
+        glRotatef(180, 1, 0, 0);
+        for(int i = 0; i < 4; ++i)
+            drawSide(i * 90, 0, 1, 0, i + 4);
+        
     glPopMatrix();
+
+    // glPushMatrix();
+    //     glTranslatef(dist - scale * dist, dist - scale * dist, dist - scale * dist);
+    //     glScaled(scale,scale,scale);
+    //     // for(int i = 0; i < 4; ++i)
+    //     //     drawSide(i * 90, 0, 1, 0, i);
+    //     drawSide(0, 0, 1, 0, 0);
+    // glPopMatrix();
+
+    // glPushMatrix();
+    //     glRotatef(90, 0, 1, 0);
+    //     glTranslatef(dist - scale * dist, dist - scale * dist, dist - scale * dist);
+    //     glScaled(scale,scale,scale);
+    //     // for(int i = 0; i < 4; ++i)
+    //     //     drawSide(i * 90, 0, 1, 0, i);
+    //     drawSide(0, 0, 1, 0, 1);
+    // glPopMatrix();
 
     // glPushMatrix();
     //     // glScalef(.5, .5, .5);
@@ -173,11 +204,16 @@ void special(int key, int x, int y) {
     // (x, y) is the mouse location in Windows' coordinates
     switch(key) {
     case GLUT_KEY_LEFT:
-        rotAngle += 5;
+        rotAngleZ += 5;
         break;
     case GLUT_KEY_RIGHT:
-        rotAngle -= 5;
+        rotAngleZ -= 5;
         break;
+    case GLUT_KEY_UP:
+        rotAngleX += 5;
+        break;
+    case GLUT_KEY_DOWN:
+        rotAngleX -= 5;
     }
     glutPostRedisplay();
 }
