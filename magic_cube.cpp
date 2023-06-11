@@ -194,8 +194,10 @@ void display() {
         glTranslatef(.5 - off, .5 - off, 0);
         // glRotatef(cylinderAngle / 2, 0, 1, 0);
         glRotatef(45, 0, 0, 1);
-
-        drawCylinder(1, r, -cylinderAngle / 2 - .1, cylinderAngle / 2 + .1, 100);
+        glPushMatrix();
+        glScalef(1, (scale) * sqrt(2),1);
+        drawCylinder(1, r, -cylinderAngle / 2 , cylinderAngle / 2 , 100);
+        glPopMatrix();
         // drawCylinder(1, .1, -cylinderAngle / 2, cylinderAngle / 2, 100);
 
     glPopMatrix();
