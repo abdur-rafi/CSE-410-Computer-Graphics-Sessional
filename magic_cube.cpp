@@ -150,8 +150,56 @@ void drawOctaHedral(){
 
 }
 
+void drawSide(int xs, int ys, int zs, int rotateC, int rotateA){
+    double r = (1 - scale) * cylinderMaxR;
+    double off = ((1 - scale) * cylinderMaxDist) / sqrt(2);
+    glPushMatrix();
+        glColor3f(1, .5, .8);
+        glTranslatef(xs * (.5 - off), ys * (.5 - off), zs * (.5 - off));
+        glRotatef(rotateA, 1 - abs(xs), 01 - abs(ys), 1 - abs(zs));
+        glPushMatrix();
+        glScalef(1, (scale) * sqrt(2),1);
+        glRotatef(rotateC, 0, 1, 0);
+        drawCylinder(1, r, -cylinderAngle / 2 , cylinderAngle / 2 , 100);
+        glPopMatrix();
+    glPopMatrix();
+}
 
-double distCylinder = 1./sqrt(2);
+void drawSides(){
+    drawSide(1, 1, 0 , 0, 45);
+    drawSide(0, 1, 1 , -90, -45);
+    drawSide(0, 1, -1 , 90, 45);
+    drawSide(-1, 1, 0 , -180, -45);
+    glPushMatrix();
+        glRotatef(90, 1, 0, 0);
+        drawSide(1, 1, 0 , 0, 45);
+        drawSide(0, 1, 1 , -90, -45);
+        drawSide(0, 1, -1 , 90, 45);
+        drawSide(-1, 1, 0 , -180, -45);
+
+    glPopMatrix();
+    glPushMatrix();
+        glRotatef(180, 1, 0, 0);
+        drawSide(1, 1, 0 , 0, 45);
+        drawSide(0, 1, 1 , -90, -45);
+        drawSide(0, 1, -1 , 90, 45);
+        drawSide(-1, 1, 0 , -180, -45);
+
+    glPopMatrix();
+    glPushMatrix();
+        glRotatef(270, 1, 0, 0);
+        drawSide(1, 1, 0 , 0, 45);
+        drawSide(0, 1, 1 , -90, -45);
+        drawSide(0, 1, -1 , 90, 45);
+        drawSide(-1, 1, 0 , -180, -45);
+
+    glPopMatrix();
+    // drawSide(1, 0, -1, 90);
+    // drawSide(-1, 1);
+    // drawSide(-1, -1);
+
+}
+
 void display() {
     // glClear(GL_COLOR_BUFFER_BIT);            // Clear the color buffer (background)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -178,29 +226,29 @@ void display() {
     drawAxes();
 
 
-    // drawOctaHedral();
+    drawOctaHedral();
 
 
     // drawCylinder(.5, .2, 10);
-    drawSide(0, 0, 1, 0, 0);
-    drawSide(90, 0, 1, 0, 1);
+    // drawSide(0, 0, 1, 0, 0);
+    // drawSide(90, 0, 1, 0, 1);
+    drawSides();
+    // double r = (1 - scale) * cylinderMaxR;
+    // double off = ((1 - scale) * cylinderMaxDist) / sqrt(2);
+    // std::cout << "r : " << r << "\n";
+    // glPushMatrix();
+    //     glColor3f(1, 1, 1);
+    //     // glTranslatef(.5 - r / sqrt(2), .5 - r / sqrt(2), 0);
+    //     glTranslatef(.5 - off, .5 - off, 0);
+    //     // glRotatef(cylinderAngle / 2, 0, 1, 0);
+    //     glRotatef(45, 0, 0, 1);
+    //     glPushMatrix();
+    //     glScalef(1, (scale) * sqrt(2),1);
+    //     drawCylinder(1, r, -cylinderAngle / 2 , cylinderAngle / 2 , 100);
+    //     glPopMatrix();
+    //     // drawCylinder(1, .1, -cylinderAngle / 2, cylinderAngle / 2, 100);
 
-    double r = (1 - scale) * cylinderMaxR;
-    double off = ((1 - scale) * cylinderMaxDist) / sqrt(2);
-    std::cout << "r : " << r << "\n";
-    glPushMatrix();
-        glColor3f(1, 1, 1);
-        // glTranslatef(.5 - r / sqrt(2), .5 - r / sqrt(2), 0);
-        glTranslatef(.5 - off, .5 - off, 0);
-        // glRotatef(cylinderAngle / 2, 0, 1, 0);
-        glRotatef(45, 0, 0, 1);
-        glPushMatrix();
-        glScalef(1, (scale) * sqrt(2),1);
-        drawCylinder(1, r, -cylinderAngle / 2 , cylinderAngle / 2 , 100);
-        glPopMatrix();
-        // drawCylinder(1, .1, -cylinderAngle / 2, cylinderAngle / 2, 100);
-
-    glPopMatrix();
+    // glPopMatrix();
     // glPushMatrix();
     //     glScaled(1,1,1);
     //     drawSide(0, 0, 1, 0, 0);
