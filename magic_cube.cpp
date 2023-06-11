@@ -38,6 +38,8 @@ double cylinderMinR = 0;
 double d2r = M_PI / 180;
 // double cylinderMaxDist = (2.0/3) / (tan((cylinderAngle / 2) * (M_PI / 180)));
 double cylinderMaxDist = (1.0/3) / tan((dihedralAngle / 2) * d2r) + (1./3) / tan((cylinderAngle / 2) * d2r)  ;
+double sphereMaxR = 1./sqrt(3);
+
 
 // float rotation
 
@@ -79,7 +81,7 @@ void drawTriangle(int colorIndex){
 //     glPopMatrix();
 // }
 
-void drawSide(int angle, float x, float y, float z, int colorIndex){
+void drawPlane(int angle, float x, float y, float z, int colorIndex){
     glPushMatrix();
         glRotatef(angle, x, y, z);
         glTranslatef(dist - scale * dist, dist - scale * dist, dist - scale * dist);
@@ -139,12 +141,12 @@ void drawCylinder(double h, double r, double startAngle, double endAngle, int se
 void drawOctaHedral(){
 
     for(int i = 0; i < 4; ++i)
-        drawSide(i * 90, 0, 1, 0, i);
+        drawPlane(i * 90, 0, 1, 0, i);
     
     glPushMatrix();
         glRotatef(180, 1, 0, 0);
         for(int i = 0; i < 4; ++i)
-            drawSide(i * 90, 0, 1, 0, i + 4);
+            drawPlane(i * 90, 0, 1, 0, i + 4);
         
     glPopMatrix();
 
@@ -199,6 +201,54 @@ void drawSides(){
     // drawSide(-1, -1);
 
 }
+struct point {
+    GLfloat x, y, z;
+};
+
+void drawSphere(double radius, int stacks, int slices) {
+    struct point points[stacks+1][slices+1];
+    for (int j = 0; j <= stacks; j++) {
+        double phi = -M_PI / 2.0 + j * M_PI / stacks;
+        double r = radius * cos(phi);
+        double h = radius * sin(phi);
+        for (int i = 0; i < slices+1; i++) {
+            double theta = i * 2.0 * M_PI / slices;
+            points[j][i].x = r * cos(theta);
+            points[j][i].y = r * sin(theta);
+            points[j][i].z = h;
+        }
+    }
+
+    glBegin(GL_QUADS);
+        for (int j = 0; j < stacks; j++) {
+            for (int i = 0; i < slices; i++) {
+                GLfloat c = (2+cos((i+j) * 2.0 * M_PI / slices)) / 3;
+                glColor3f(c,c,c);
+                glVertex3f(points[j][i].x, points[j][i].y, points[j][i].z);
+                glVertex3f(points[j][i+1].x, points[j][i+1].y, points[j][i+1].z);
+
+                glVertex3f(points[j+1][i+1].x, points[j+1][i+1].y, points[j+1][i+1].z);
+                glVertex3f(points[j+1][i].x, points[j+1][i].y, points[j+1][i].z);
+            }
+        }
+    glEnd();
+}
+
+void drawSphereAtCorner(int x, int y, int z){
+    glPushMatrix();
+        glTranslatef(scale * x,scale * y, scale * z);
+        drawSphere((1-scale) * sphereMaxR, 100, 100);
+    glPopMatrix();
+}
+void drawSpheres(){
+    drawSphereAtCorner(1, 0, 0);
+    drawSphereAtCorner(0, 1, 0);
+    drawSphereAtCorner(0, 0, 1);
+
+    drawSphereAtCorner(-1, 0, 0);
+    drawSphereAtCorner(0, -1, 0);
+    drawSphereAtCorner(0, 0, -1);
+}
 
 void display() {
     // glClear(GL_COLOR_BUFFER_BIT);            // Clear the color buffer (background)
@@ -225,6 +275,7 @@ void display() {
     // drawCube();
     drawAxes();
 
+    // drawSphereQuad(.5, 50, 50);
 
     drawOctaHedral();
 
@@ -233,6 +284,10 @@ void display() {
     // drawSide(0, 0, 1, 0, 0);
     // drawSide(90, 0, 1, 0, 1);
     drawSides();
+
+    drawSpheres();
+
+    // drawSphere(.3, 500, 500);
     // double r = (1 - scale) * cylinderMaxR;
     // double off = ((1 - scale) * cylinderMaxDist) / sqrt(2);
     // std::cout << "r : " << r << "\n";

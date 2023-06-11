@@ -681,6 +681,21 @@ void keyboardListener(unsigned char key, int x,int y){
 			break;
 		case 's':
 			startRotate = 1 - startRotate;
+		case 'j':
+			if(squareH > 0)
+			{
+				squareH -= 2;
+				sphereR += 1;
+			}
+			break;
+		case 'k':
+			if(sphereR > 0)
+			{
+				squareH += 2;
+				sphereR -= 1;
+			}
+			break;
+
 		default:
 			break;
 	}
@@ -717,20 +732,6 @@ void specialKeyListener(int key, int x,int y){
 		case GLUT_KEY_INSERT:
 			break;
 
-		case GLUT_KEY_HOME:
-			if(squareH > 0)
-			{
-				squareH -= 2;
-				sphereR += 1;
-			}
-			break;
-		case GLUT_KEY_END:
-			if(sphereR > 0)
-			{
-				squareH += 2;
-				sphereR -= 1;
-			}
-			break;
 
 		default:
 			break;
