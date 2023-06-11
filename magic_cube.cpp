@@ -1,5 +1,6 @@
 #include <GL/glut.h>  // GLUT, include glu.h and gl.h
 #include <cmath>
+#include <iostream>
 
 /* Initialize OpenGL Graphics */
 void initGL() {
@@ -28,7 +29,15 @@ float sideColors[][3] = {
 int rotAngleZ = 0;
 int rotAngleX = 0;
 float scale = 1;
+float scaleInc = .01;
 double dist = (1.0 / 3);
+double dihedralAngle = 109.47;
+double cylinderAngle = 70.5287794;
+double cylinderMaxR = (1.0 / 3) / sin((cylinderAngle / 2) * (M_PI / 180));
+double cylinderMinR = 0;
+double d2r = M_PI / 180;
+// double cylinderMaxDist = (2.0/3) / (tan((cylinderAngle / 2) * (M_PI / 180)));
+double cylinderMaxDist = (1.0/3) / tan((dihedralAngle / 2) * d2r) + (1./3) / tan((cylinderAngle / 2) * d2r)  ;
 
 // float rotation
 
@@ -79,8 +88,70 @@ void drawSide(int angle, float x, float y, float z, int colorIndex){
     glPopMatrix();
 }
 
-/*  Handler for window-repaint event. Call back when the window first appears and
-    whenever the window needs to be re-painted. */
+void drawCylinder(double h, double r, double startAngle, double endAngle, int segments){
+    startAngle *= (M_PI / 180.);
+    endAngle *= (M_PI / 180.);
+
+    double angleGap = (endAngle - startAngle);
+    double delta = angleGap / segments;
+    double s = startAngle;
+    double xf1, zf1, xf2, zf2;
+    glBegin(GL_QUADS);
+        while(s < endAngle){
+            xf1 = r * cos(s);
+            zf1 = r * sin(s);
+            xf2 = r * cos(s + delta);
+            zf2 = r * sin(s + delta);
+
+            glVertex3d(xf1, -h / 2, zf1);
+            glVertex3d(xf1, h / 2, zf1);
+            glVertex3d(xf2, h / 2, zf2);
+            glVertex3d(xf2, -h / 2, zf2);
+            s += delta;
+        }
+    glEnd();
+}
+
+// void drawCylinder(double height, double radius, int segments) {
+//     double tempx = radius, tempz = 0;
+//     double currx, currz;
+//     glBegin(GL_QUADS);
+//         for (int i = 1; i <= segments; i++) {
+//             double theta = i * 2.0 * M_PI / segments;
+//             currx = radius * cos(theta);
+//             currz = radius * sin(theta);
+
+//             GLfloat c = (2+cos(theta))/3;
+//             glColor3f(c,c,c);
+//             glVertex3f(currx, height, currz);
+//             glVertex3f(currx, 0, currz);
+
+//             glVertex3f(tempx, 0, tempz);
+//             glVertex3f(tempx, height, tempz);
+
+//             tempx = currx;
+//             tempz = currz;
+//         }
+//     glEnd();
+// }
+
+
+void drawOctaHedral(){
+
+    for(int i = 0; i < 4; ++i)
+        drawSide(i * 90, 0, 1, 0, i);
+    
+    glPushMatrix();
+        glRotatef(180, 1, 0, 0);
+        for(int i = 0; i < 4; ++i)
+            drawSide(i * 90, 0, 1, 0, i + 4);
+        
+    glPopMatrix();
+
+}
+
+
+double distCylinder = 1./sqrt(2);
 void display() {
     // glClear(GL_COLOR_BUFFER_BIT);            // Clear the color buffer (background)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -105,21 +176,33 @@ void display() {
     // if (isPyramid) drawPyramid();
     // drawCube();
     drawAxes();
-    double dist = (1.0 / 3);
 
+
+    // drawOctaHedral();
+
+
+    // drawCylinder(.5, .2, 10);
+    drawSide(0, 0, 1, 0, 0);
+    drawSide(90, 0, 1, 0, 1);
+
+    double r = (1 - scale) * cylinderMaxR;
+    double off = ((1 - scale) * cylinderMaxDist) / sqrt(2);
+    std::cout << "r : " << r << "\n";
+    glPushMatrix();
+        glColor3f(1, 1, 1);
+        // glTranslatef(.5 - r / sqrt(2), .5 - r / sqrt(2), 0);
+        glTranslatef(.5 - off, .5 - off, 0);
+        // glRotatef(cylinderAngle / 2, 0, 1, 0);
+        glRotatef(45, 0, 0, 1);
+
+        drawCylinder(1, r, -cylinderAngle / 2 - .1, cylinderAngle / 2 + .1, 100);
+        // drawCylinder(1, .1, -cylinderAngle / 2, cylinderAngle / 2, 100);
+
+    glPopMatrix();
     // glPushMatrix();
     //     glScaled(1,1,1);
     //     drawSide(0, 0, 1, 0, 0);
     // glPopMatrix();
-
-    for(int i = 0; i < 4; ++i)
-        drawSide(i * 90, 0, 1, 0, i);
-    glPushMatrix();
-        glRotatef(180, 1, 0, 0);
-        for(int i = 0; i < 4; ++i)
-            drawSide(i * 90, 0, 1, 0, i + 4);
-        
-    glPopMatrix();
 
     // glPushMatrix();
     //     glTranslatef(dist - scale * dist, dist - scale * dist, dist - scale * dist);
@@ -187,10 +270,10 @@ void keyboard(unsigned char key, int x, int y) {
     // (x, y) is the mouse location in Windows' coordinates
     switch (key) {
     case '.':
-        scale = fmin(scale + .1, 1);
+        scale = fmin(scale + scaleInc, 1);
         break;
     case ',':
-        scale = fmax(0, scale-.1);
+        scale = fmax(0, scale-scaleInc);
     
     default:
         break;
