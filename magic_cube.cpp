@@ -16,7 +16,7 @@ GLfloat centerx = 0, centery = 0, centerz = 0;
 GLfloat upx = 0, upy = 1, upz = 0;
 bool isAxes = true, isCube = false, isPyramid = false;
 
-float sideColors[][3] = {
+float planeColors[][3] = {
     {1, 0, 0},
     {0, 1, 0},
     {0, 0, 1},
@@ -26,6 +26,16 @@ float sideColors[][3] = {
     {1, 1, 1},
     {.5, 0, 1},
 };
+
+struct point {
+    GLfloat x, y, z;
+
+    point operator*(float s) const{
+        point t = {x * s, y * s, z * s};
+        return t;
+    }
+};
+
 
 int rotAngleZ = 0;
 int rotAngleX = 0;
@@ -37,12 +47,16 @@ double cylinderAngle = 70.5287794;
 double cylinderMaxR = (1.0 / 3) / sin((cylinderAngle / 2) * (M_PI / 180));
 double cylinderMinR = 0;
 double d2r = M_PI / 180;
-// double cylinderMaxDist = (2.0/3) / (tan((cylinderAngle / 2) * (M_PI / 180)));
 double cylinderMaxDist = (1.0/3) / tan((dihedralAngle / 2) * d2r) + (1./3) / tan((cylinderAngle / 2) * d2r)  ;
 double sphereMaxR = 1./sqrt(3);
+const point center = {1./3, 1./3, 1./3};
+
+std::vector<std::vector<point>> buildUnitPositiveX(int);
 
 
-// float rotation
+auto x = buildUnitPositiveX(5);
+
+
 
 /* Draw axes: X in Red, Y in Green and Z in Blue */
 void drawAxes() {
@@ -68,32 +82,45 @@ void drawAxes() {
 
 void drawTriangle(int colorIndex){
     glBegin(GL_TRIANGLES);
-        glColor3fv(sideColors[colorIndex]);
+        glColor3fv(planeColors[colorIndex]);
         glVertex3f(1,0,0);
         glVertex3f(0,1,0);
         glVertex3f(0,0,1);
     glEnd();
 }
 
-// void drawSide(int angle,float x, float y, float z,int colorIndex){
-//     glPushMatrix();
-//         glRotatef(angle, x, y, z);
-//         drawTriangle(colorIndex);
-//     glPopMatrix();
-// }
 
-void drawPlane(int angle, float x, float y, float z, int colorIndex){
+void drawPlane(int angle, point rotV, int colorIndex){
+    point t = center * (1 - scale);
     glPushMatrix();
-        glRotatef(angle, x, y, z);
-        glTranslatef(dist - scale * dist, dist - scale * dist, dist - scale * dist);
+        glRotatef(angle, rotV.x, rotV.y, rotV.z);
+        glTranslatef(t.x, t.y, t.z);
+        // glTranslatef(dist - scale * dist, dist - scale * dist, dist - scale * dist);
         glScaled(scale,scale,scale);
         drawTriangle(colorIndex);
     glPopMatrix();
 }
 
-void drawCylinder(double h, double r, double startAngle, double endAngle, int segments){
-    startAngle *= (M_PI / 180.);
-    endAngle *= (M_PI / 180.);
+void drawOctaHedral(){
+
+    for(int i = 0; i < 4; ++i)
+        drawPlane(i * 90, {0, 1, 0}, i);
+    
+    glPushMatrix();
+        glRotatef(180, 1, 0, 0);
+        for(int i = 0; i < 4; ++i)
+            drawPlane(i * 90, {0, 1, 0}, i + 4);
+        
+    glPopMatrix();
+
+}
+
+
+void drawCylinder(int segments){
+    double h = 1;
+    double r = 1;
+    double startAngle = (-cylinderAngle / 2) * (M_PI / 180.);
+    double endAngle = (cylinderAngle / 2) * (M_PI / 180.);
 
     double angleGap = (endAngle - startAngle);
     double delta = angleGap / segments;
@@ -115,43 +142,6 @@ void drawCylinder(double h, double r, double startAngle, double endAngle, int se
     glEnd();
 }
 
-// void drawCylinder(double height, double radius, int segments) {
-//     double tempx = radius, tempz = 0;
-//     double currx, currz;
-//     glBegin(GL_QUADS);
-//         for (int i = 1; i <= segments; i++) {
-//             double theta = i * 2.0 * M_PI / segments;
-//             currx = radius * cos(theta);
-//             currz = radius * sin(theta);
-
-//             GLfloat c = (2+cos(theta))/3;
-//             glColor3f(c,c,c);
-//             glVertex3f(currx, height, currz);
-//             glVertex3f(currx, 0, currz);
-
-//             glVertex3f(tempx, 0, tempz);
-//             glVertex3f(tempx, height, tempz);
-
-//             tempx = currx;
-//             tempz = currz;
-//         }
-//     glEnd();
-// }
-
-
-void drawOctaHedral(){
-
-    for(int i = 0; i < 4; ++i)
-        drawPlane(i * 90, 0, 1, 0, i);
-    
-    glPushMatrix();
-        glRotatef(180, 1, 0, 0);
-        for(int i = 0; i < 4; ++i)
-            drawPlane(i * 90, 0, 1, 0, i + 4);
-        
-    glPopMatrix();
-
-}
 
 void drawSide(int xs, int ys, int zs, int rotateC, int rotateA){
     double r = (1 - scale) * cylinderMaxR;
@@ -161,9 +151,10 @@ void drawSide(int xs, int ys, int zs, int rotateC, int rotateA){
         glTranslatef(xs * (.5 - off), ys * (.5 - off), zs * (.5 - off));
         glRotatef(rotateA, 1 - abs(xs), 01 - abs(ys), 1 - abs(zs));
         glPushMatrix();
-        glScalef(1, (scale) * sqrt(2),1);
-        glRotatef(rotateC, 0, 1, 0);
-        drawCylinder(1, r, -cylinderAngle / 2 , cylinderAngle / 2 , 100);
+            glScalef(1, (scale) * sqrt(2),1);
+            glRotatef(rotateC, 0, 1, 0);
+            glScalef(r, 1, r);
+            drawCylinder(100);
         glPopMatrix();
     glPopMatrix();
 }
@@ -197,14 +188,8 @@ void drawSides(){
         drawSide(-1, 1, 0 , -180, -45);
 
     glPopMatrix();
-    // drawSide(1, 0, -1, 90);
-    // drawSide(-1, 1);
-    // drawSide(-1, -1);
 
 }
-struct point {
-    GLfloat x, y, z;
-};
 
 void drawSphere(double radius, int stacks, int slices) {
     struct point points[stacks+1][slices+1];
@@ -298,7 +283,6 @@ std::vector<std::vector<point>> buildUnitPositiveX(int subdivision)
     return vs;
 }
 
-auto x = buildUnitPositiveX(5);
 
 void drawSphereSide(){
     glPushMatrix();
@@ -354,86 +338,14 @@ void display() {
         glRotatef(rotAngleZ, 0, 1, 0);
         glRotatef(rotAngleX, 1, 0, 0);
 
-    // draw
-    // if (isAxes) drawAxes();
-    // if (isCube) drawCube();
-    // if (isPyramid) drawPyramid();
-    // drawCube();
-    drawAxes();
 
-    // drawSphereQuad(.5, 50, 50);
+        drawAxes();
+        drawOctaHedral();
+        drawSides();
+        drawSpheres();
 
-    drawOctaHedral();
-
-
-    // drawCylinder(.5, .2, 10);
-    // drawSide(0, 0, 1, 0, 0);
-    // drawSide(90, 0, 1, 0, 1);
-    drawSides();
-    drawSpheres();
-    // drawSpheres();
-    
-    // glPushMatrix();
-    //     glRotatef(90, 0, 1, 0);
-    //     drawSphereSide();
-    //     glRotatef(90, 0, 1, 0);
-    //     drawSphereSide();
-    // glPopMatrix();
-    
-    // drawSphere(.3, 500, 500);
-    // double r = (1 - scale) * cylinderMaxR;
-    // double off = ((1 - scale) * cylinderMaxDist) / sqrt(2);
-    // std::cout << "r : " << r << "\n";
-    // glPushMatrix();
-    //     glColor3f(1, 1, 1);
-    //     // glTranslatef(.5 - r / sqrt(2), .5 - r / sqrt(2), 0);
-    //     glTranslatef(.5 - off, .5 - off, 0);
-    //     // glRotatef(cylinderAngle / 2, 0, 1, 0);
-    //     glRotatef(45, 0, 0, 1);
-    //     glPushMatrix();
-    //     glScalef(1, (scale) * sqrt(2),1);
-    //     drawCylinder(1, r, -cylinderAngle / 2 , cylinderAngle / 2 , 100);
-    //     glPopMatrix();
-    //     // drawCylinder(1, .1, -cylinderAngle / 2, cylinderAngle / 2, 100);
-
-    // glPopMatrix();
-    // glPushMatrix();
-    //     glScaled(1,1,1);
-    //     drawSide(0, 0, 1, 0, 0);
-    // glPopMatrix();
-
-    // glPushMatrix();
-    //     glTranslatef(dist - scale * dist, dist - scale * dist, dist - scale * dist);
-    //     glScaled(scale,scale,scale);
-    //     // for(int i = 0; i < 4; ++i)
-    //     //     drawSide(i * 90, 0, 1, 0, i);
-    //     drawSide(0, 0, 1, 0, 0);
-    // glPopMatrix();
-
-    // glPushMatrix();
-    //     glRotatef(90, 0, 1, 0);
-    //     glTranslatef(dist - scale * dist, dist - scale * dist, dist - scale * dist);
-    //     glScaled(scale,scale,scale);
-    //     // for(int i = 0; i < 4; ++i)
-    //     //     drawSide(i * 90, 0, 1, 0, i);
-    //     drawSide(0, 0, 1, 0, 1);
-    // glPopMatrix();
-
-    // glPushMatrix();
-    //     // glScalef(.5, .5, .5);
-    //     glScalef(scale,scale,scale);
-    //     for(int i = 0; i < 4; ++i)
-    //         drawSide(i * 90, 0, 1, 0, i);
-    // glPopMatrix();
-
-    // glPushMatrix();
-    //     glRotatef(180, 1, 0, 0);
-    //     glScalef(scale,scale,scale);
-    //     // glScalef(.5, .5, .5);
-    //     for(int i = 0; i < 4; ++i)
-    //         drawSide(i * 90, 0, 1, 0, i + 4);
-    // glPopMatrix();
     glPopMatrix();
+
     glutSwapBuffers();  // Render now
 }
 
