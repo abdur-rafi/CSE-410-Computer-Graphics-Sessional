@@ -159,35 +159,59 @@ void drawSide(int xs, int ys, int zs, int rotateC, int rotateA){
     glPopMatrix();
 }
 
+void drawSide(){
+    double r = (1 - scale) * cylinderMaxR;
+    double off = ((1 - scale) * cylinderMaxDist) / sqrt(2);
+    glPushMatrix();
+        glColor3f(1, .5, .8);
+        glTranslatef((.5 - off),(.5 - off), 0);
+        glRotatef(45, 0,0,1);
+        glPushMatrix();
+            glScalef(1, (scale) * sqrt(2),1);
+            glScalef(r, 1, r);
+            drawCylinder(100);
+        glPopMatrix();
+    glPopMatrix();
+}
+
+
 void drawSides(){
-    drawSide(1, 1, 0 , 0, 45);
-    drawSide(0, 1, 1 , -90, -45);
-    drawSide(0, 1, -1 , 90, 45);
-    drawSide(-1, 1, 0 , -180, -45);
     glPushMatrix();
+
+        drawSide();
+        glRotatef(90, 0, 1, 0);
+        drawSide();
+        glRotatef(90, 0, 1, 0);
+        drawSide();
+        glRotatef(90, 0, 1, 0);
+        drawSide();
+        glRotatef(90, 0, 1, 0);
+
         glRotatef(90, 1, 0, 0);
-        drawSide(1, 1, 0 , 0, 45);
-        drawSide(0, 1, 1 , -90, -45);
-        drawSide(0, 1, -1 , 90, 45);
-        drawSide(-1, 1, 0 , -180, -45);
+
+        drawSide();
+        glRotatef(90, 0, 0, 1);
+        drawSide();
+        glRotatef(90, 0, 0, 1);
+        drawSide();
+        glRotatef(90, 0, 0, 1);
+        drawSide();
+        glRotatef(90, 0, 0, 1);
+
+        glRotatef(90, 0, 0, 1);
+        glRotatef(90, 1, 0, 0);
+
+        drawSide();
+        glRotatef(90, 0, 1, 0);
+        drawSide();
+        glRotatef(90, 0, 1, 0);
+        drawSide();
+        glRotatef(90, 0, 1, 0);
+        drawSide();
+        glRotatef(90, 0, 1, 0);
 
     glPopMatrix();
-    glPushMatrix();
-        glRotatef(180, 1, 0, 0);
-        drawSide(1, 1, 0 , 0, 45);
-        drawSide(0, 1, 1 , -90, -45);
-        drawSide(0, 1, -1 , 90, 45);
-        drawSide(-1, 1, 0 , -180, -45);
 
-    glPopMatrix();
-    glPushMatrix();
-        glRotatef(270, 1, 0, 0);
-        drawSide(1, 1, 0 , 0, 45);
-        drawSide(0, 1, 1 , -90, -45);
-        drawSide(0, 1, -1 , 90, 45);
-        drawSide(-1, 1, 0 , -180, -45);
-
-    glPopMatrix();
 
 }
 
