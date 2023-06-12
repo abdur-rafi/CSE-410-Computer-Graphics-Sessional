@@ -10,6 +10,16 @@ void initGL() {
     glEnable(GL_DEPTH_TEST);   // Enable depth testing for z-culling
 }
 
+struct point {
+    GLfloat x, y, z;
+
+    point operator*(float s) const{
+        point t = {x * s, y * s, z * s};
+        return t;
+    }
+};
+
+
 // Global variables
 GLfloat eyex = 1, eyey = 2, eyez = 2;
 GLfloat centerx = 0, centery = 0, centerz = 0;
@@ -27,14 +37,17 @@ float planeColors[][3] = {
     {.5, 0, 1},
 };
 
-struct point {
-    GLfloat x, y, z;
-
-    point operator*(float s) const{
-        point t = {x * s, y * s, z * s};
-        return t;
-    }
+float sphereColors[][3] = {
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 0, 1},
+    {1, 1, 0},
+    {1, 0, 1},
+    {0, 1, 1}
 };
+
+float cylinderColor[3] = {.4, .2, .1};
+
 
 
 int rotAngleZ = 0;
@@ -143,27 +156,11 @@ void drawCylinder(int segments){
 }
 
 
-void drawSide(int xs, int ys, int zs, int rotateC, int rotateA){
-    double r = (1 - scale) * cylinderMaxR;
-    double off = ((1 - scale) * cylinderMaxDist) / sqrt(2);
-    glPushMatrix();
-        glColor3f(1, .5, .8);
-        glTranslatef(xs * (.5 - off), ys * (.5 - off), zs * (.5 - off));
-        glRotatef(rotateA, 1 - abs(xs), 01 - abs(ys), 1 - abs(zs));
-        glPushMatrix();
-            glScalef(1, (scale) * sqrt(2),1);
-            glRotatef(rotateC, 0, 1, 0);
-            glScalef(r, 1, r);
-            drawCylinder(100);
-        glPopMatrix();
-    glPopMatrix();
-}
-
 void drawSide(){
     double r = (1 - scale) * cylinderMaxR;
     double off = ((1 - scale) * cylinderMaxDist) / sqrt(2);
     glPushMatrix();
-        glColor3f(1, .5, .8);
+        glColor3fv(cylinderColor);
         glTranslatef((.5 - off),(.5 - off), 0);
         glRotatef(45, 0,0,1);
         glPushMatrix();
@@ -213,35 +210,6 @@ void drawSides(){
     glPopMatrix();
 
 
-}
-
-void drawSphere(double radius, int stacks, int slices) {
-    struct point points[stacks+1][slices+1];
-    for (int j = 0; j <= stacks; j++) {
-        double phi = -M_PI / 2.0 + j * M_PI / stacks;
-        double r = radius * cos(phi);
-        double h = radius * sin(phi);
-        for (int i = 0; i < slices+1; i++) {
-            double theta = i * 2.0 * M_PI / slices;
-            points[j][i].x = r * cos(theta);
-            points[j][i].y = r * sin(theta);
-            points[j][i].z = h;
-        }
-    }
-
-    glBegin(GL_QUADS);
-        for (int j = 0; j < stacks; j++) {
-            for (int i = 0; i < slices; i++) {
-                GLfloat c = (2+cos((i+j) * 2.0 * M_PI / slices)) / 3;
-                glColor3f(c,c,c);
-                glVertex3f(points[j][i].x, points[j][i].y, points[j][i].z);
-                glVertex3f(points[j][i+1].x, points[j][i+1].y, points[j][i+1].z);
-
-                glVertex3f(points[j+1][i+1].x, points[j+1][i+1].y, points[j+1][i+1].z);
-                glVertex3f(points[j+1][i].x, points[j+1][i].y, points[j+1][i].z);
-            }
-        }
-    glEnd();
 }
 
 
@@ -308,9 +276,9 @@ std::vector<std::vector<point>> buildUnitPositiveX(int subdivision)
 }
 
 
-void drawSphereSide(){
+void drawSphereSide(int colorIndex){
     glPushMatrix();
-        glColor3f(.5, 1, .5);
+        glColor3fv(sphereColors[colorIndex]);
         glTranslatef(scale, 0, 0);
         glScalef((1-scale) / sqrt(3) , (1-scale) / sqrt(3), (1-scale) / sqrt(3));
         glBegin(GL_QUADS);
@@ -330,17 +298,20 @@ void drawSphereSide(){
 
 void drawSpheres(){
     glPushMatrix();
-        drawSphereSide();
+        drawSphereSide(0);
         glRotatef(90, 0, 1, 0);
-        drawSphereSide();
+        drawSphereSide(1);
         glRotatef(90, 0, 1, 0);
-        drawSphereSide();
+        drawSphereSide(2);
         glRotatef(90, 0, 1, 0);
-        drawSphereSide();
+        drawSphereSide(3);
+        glRotatef(90, 0, 1, 0);
+        
         glRotatef(90, 0, 0, 1);
-        drawSphereSide();
-        glRotatef(-90, 0, 0, 1);
-        drawSphereSide();
+
+        drawSphereSide(4);
+        glRotatef(-180, 0, 0, 1);
+        drawSphereSide(5);
     glPopMatrix();
 }
 
@@ -447,13 +418,6 @@ int main(int argc, char** argv) {
     glutReshapeFunc(reshapeListener);           // Register callback handler for window re-shape
     glutKeyboardFunc(keyboard);
     glutSpecialFunc(special);
-    auto x = buildUnitPositiveX(3);
-    std::cout << x[0].size() << "\n";
-    // std::cout << x.size() << "\n";
-    // for(int i = 0; i < x.size()/3; ++i){
-    //     int b = 3 * i;
-    //     std::cout << x[b] << " " << x[b+1] << " " << x[b + 2] << "\n";
-    // }
     initGL();                                   // Our own OpenGL initialization
     glutMainLoop();                             // Enter the event-processing loop
     return 0;
