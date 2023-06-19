@@ -434,12 +434,12 @@ void keyboard(unsigned char key, int x, int y) {
         rotateVector(right, up, -rotationRate);
         break;
     case '5':
-        rotateVector(look, right, -rotationRate);
-        rotateVector(look, up, -rotationRate);
-        break;
-    case '6':
         rotateVector(look, right, rotationRate);
         rotateVector(look, up, rotationRate);
+        break;
+    case '6':
+        rotateVector(look, right, -rotationRate);
+        rotateVector(look, up, -rotationRate);
         break;
     // case 'w':
     //     prev = eye + look;
