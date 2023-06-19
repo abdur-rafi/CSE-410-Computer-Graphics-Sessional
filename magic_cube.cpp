@@ -10,6 +10,8 @@ void initGL() {
     glEnable(GL_DEPTH_TEST);   // Enable depth testing for z-culling
 }
 
+const float rotationRate = .1;
+
 struct point {
     GLfloat x, y, z;
 
@@ -17,8 +19,30 @@ struct point {
         point t = {x * s, y * s, z * s};
         return t;
     }
+    point operator+(point p) const{
+        point t = {x + p.x, y + p.y, z + p.z};
+        return t;
+    }
+
+    point operator-(point p) const{
+        point t = {x - p.x, y - p.y, z - p.z};
+        return t;
+    }
 };
 
+point crossProduct(point& p1, point& p2){
+    return {p1.y * p2.z - p2.y * p1.z, -p1.x * p2.z + p2.x * p1.z, p1.x * p2.y - p2.x * p1.y};
+}
+
+void rotateVector(point& axis, point& vector, float angle){
+    point u = crossProduct(axis, vector);
+    vector = u * sin(angle) + vector * cos(angle);
+}
+
+point eye = {0, 0 , 4};
+point look = {0, 0, -1};
+point right = {1, 0, 0};
+point up = {0, 1, 0};
 
 // Global variables
 GLfloat eyex = 1, eyey = 2, eyez = 2;
@@ -50,7 +74,7 @@ float cylinderColor[3] = {.4, .2, .1};
 
 
 
-int rotAngleZ = 0;
+int rotAngleY = 0;
 int rotAngleX = 0;
 float scale = 1;
 float scaleInc = .01;
@@ -325,13 +349,13 @@ void display() {
     // gluLookAt(0,0,0, 0,0,-100, 0,1,0);
 
     // control viewing (or camera)
-    gluLookAt(eyex,eyey,eyez,
-              centerx,centery,centerz,
-              upx,upy,upz);
+    gluLookAt(eye.x, eye.y, eye.z,
+              eye.x + look.x, eye.y + look.y, eye.z + look.z,
+              up.x, up.y, up.z);
     
     glPushMatrix();
-        glRotatef(rotAngleZ, 0, 1, 0);
-        glRotatef(rotAngleX, 1, 0, 0);
+        glRotatef(rotAngleY, 0, 1, 0);
+        // glRotatef(rotAngleX, 1, 0, 0);
 
 
         drawAxes();
@@ -379,7 +403,35 @@ void keyboard(unsigned char key, int x, int y) {
         break;
     case ',':
         scale = fmax(0, scale-scaleInc);
-    
+        break;
+    case 'a':
+        rotAngleY += 5;
+        break;
+    case 'd':
+        rotAngleY -= 5;
+        break;
+    case '1':
+        rotateVector(up, look, -rotationRate);
+        break;
+    case '2':
+        rotateVector(up, look, rotationRate);
+        break;
+    case '3':
+        rotateVector(right, look, rotationRate);
+        rotateVector(right, up, rotationRate);
+        break;
+    case '4':
+        rotateVector(right, look, -rotationRate);
+        rotateVector(right, up, -rotationRate);
+        break;
+    case '5':
+        rotateVector(look, right, -rotationRate);
+        rotateVector(look, up, -rotationRate);
+        break;
+    case '6':
+        rotateVector(look, right, rotationRate);
+        rotateVector(look, up, rotationRate);
+        break;
     default:
         break;
     }
@@ -392,10 +444,10 @@ void special(int key, int x, int y) {
     // (x, y) is the mouse location in Windows' coordinates
     switch(key) {
     case GLUT_KEY_LEFT:
-        rotAngleZ += 5;
+        rotAngleY += 5;
         break;
     case GLUT_KEY_RIGHT:
-        rotAngleZ -= 5;
+        rotAngleY -= 5;
         break;
     case GLUT_KEY_UP:
         rotAngleX += 5;
