@@ -11,6 +11,7 @@ void initGL() {
 }
 
 const float rotationRate = .1;
+const float movementRate = .1;
 
 struct point {
     GLfloat x, y, z;
@@ -37,6 +38,13 @@ point crossProduct(point& p1, point& p2){
 void rotateVector(point& axis, point& vector, float angle){
     point u = crossProduct(axis, vector);
     vector = u * sin(angle) + vector * cos(angle);
+}
+
+void normalize(point& p){
+    double mag = sqrt(p.x  * p.x + p.y * p.y + p.z * p.z);
+    if(mag > 1e-7){
+        p = p * (1. / mag);
+    }
 }
 
 point eye = {0, 0 , 4};
@@ -397,6 +405,7 @@ void reshapeListener(GLsizei width, GLsizei height) {  // GLsizei for non-negati
 void keyboard(unsigned char key, int x, int y) {
     // key is the char pressed, e.g., 'a' or 27 for ESC
     // (x, y) is the mouse location in Windows' coordinates
+    point prev;
     switch (key) {
     case '.':
         scale = fmin(scale + scaleInc, 1);
@@ -432,6 +441,16 @@ void keyboard(unsigned char key, int x, int y) {
         rotateVector(look, right, rotationRate);
         rotateVector(look, up, rotationRate);
         break;
+    // case 'w':
+    //     prev = eye + look;
+    //     eye = eye + up * movementRate;
+    //     // look =  prev - eye;
+    //     // normalize(look);
+    //     break;
+    // case 's':
+    //     rotateVector(look, right, rotationRate);
+    //     rotateVector(look, up, rotationRate);
+    //     break;
     default:
         break;
     }
@@ -443,17 +462,25 @@ void special(int key, int x, int y) {
     // specialKey: GLUT_KEY_* (* for LEFT, RIGHT, UP, DOWN, HOME, END, PAGE_UP, PAGE_DOWN, F1,...F12). 
     // (x, y) is the mouse location in Windows' coordinates
     switch(key) {
+    
     case GLUT_KEY_LEFT:
-        rotAngleY += 5;
+        eye = eye - right * movementRate;
         break;
     case GLUT_KEY_RIGHT:
-        rotAngleY -= 5;
+        eye = eye + right * movementRate;
         break;
     case GLUT_KEY_UP:
-        rotAngleX += 5;
+        eye = eye + look * movementRate;
         break;
     case GLUT_KEY_DOWN:
-        rotAngleX -= 5;
+        eye = eye - look * movementRate;
+        break;
+    case GLUT_KEY_PAGE_UP:
+        eye = eye + up * movementRate;
+        break;
+    case GLUT_KEY_PAGE_DOWN:
+        eye = eye - up * movementRate;
+        break;
     }
     glutPostRedisplay();
 }
