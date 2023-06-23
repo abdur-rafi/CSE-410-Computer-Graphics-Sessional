@@ -9,19 +9,26 @@ const float CLOCK_CENTER_Y = 0.3f;
 const float CLOCK_RADIUS = .4f;
 const float CLOCK_OUTER_RADIUS = .5f;
 const float CENTER_KNOB_W = .02f;
-
+const float CLOCK_OUTER_COLOR[] = {0.498, 0.588, 1};
+const float CLOCK_INNER_COLOR[] = {0.  ,0.  ,0.133};
+const float CENTER_KNOB_COLOR[] = {0.498, 0.588, 1};
+// const float CENTER_KNOB_COLOR[] = {0.016, 0.059, 0.086};
+const float CENTER_KNOB_R = .025f;
 // ticks
 const float LARGE_TICK = .1f;
 const float SMALL_TICK = .05f;
-
+const float TICKS_COLOR[] = {1, 1, 1};
 // pendulum
-const float BOB_RADIUS = .09f;
+const float BOB_RADIUS = .1f;
 const float JOINT_RADIUS = .05f;
-const float ROD_LEN = .4f;
+const float ROD_LEN = .45f;
 const float ROD_WIDTH = .05f;
 const float ANGLE_DELTA = (M_PI * 2) / 100;
-const float MAX_ANGLE = (M_PI) / 4;
+const float MAX_ANGLE = (M_PI) / 6;
 const float OMEGA = M_PI;
+const float JOIN_COLOR[] = {0.016, 0.059, 0.086};
+const float BOB_COLOR[] = {0.996, 0.843, 0.4};
+
 
 // hands
 const float HOUR_LEN = .13f;
@@ -36,6 +43,12 @@ const float SEC_LEN = .2;
 const float S_TR_HEIGHT = .1f;
 const float SEC_WIDTH = .01f;
 
+const float OUTER_BODY_START_ANGLE = -60. * (M_PI / 180);
+const float OUTER_BODY_SPAN = 60 * (M_PI / 180);
+const float OUTER_BODY_H = .7;
+const float HANDS_COLOR[] = {1, 1, 1};
+
+const float OUTER_BODY_COLOR[] = {0, 0.071, 0.259};
 // others
 const float EPS = 1e-5;
 const int INTERVAL = 20;
@@ -59,13 +72,13 @@ void timer(int value){
     glutTimerFunc(INTERVAL,timer, 0);
 }
 
-void drawCircle(GLfloat x, GLfloat y, GLfloat radius, bool filled){
+void drawCircle(GLfloat x, GLfloat y, GLfloat radius, bool filled, const float* color){
     if(!filled)
         glBegin(GL_LINE_LOOP);
     else{
         glBegin(GL_TRIANGLE_FAN);
     }
-        glColor3f(1.,1.,1.);
+        glColor3fv(color);
         double angle = 0;
         while(angle < M_PI * 2){
             glVertex2f(xFromAngle(angle, radius, x),
@@ -158,11 +171,14 @@ void drawTriag(float mx, float my, float cx, float cy, float width){
 }
 
 void drawClock(){
-    drawCircle(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_RADIUS, false);
-    drawCircle(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_OUTER_RADIUS, false);
+
+    drawCircle(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_OUTER_RADIUS, true, CLOCK_OUTER_COLOR);
+    drawCircle(CLOCK_CENTER_X, CLOCK_CENTER_Y, CLOCK_RADIUS, true, CLOCK_INNER_COLOR);
 
     double tickAngle = 0;
     double w = SMALL_TICK;
+
+    glColor3fv(TICKS_COLOR);
     glBegin(GL_LINES);
         for(int i = 0; i < 12; ++i){
         
@@ -189,13 +205,19 @@ void drawClock(){
 
     glEnd();
 
+    
+
+}
+
+void drawCenterKnob(){
+    glColor3fv(CENTER_KNOB_COLOR);
+    // drawCircle(CLOCK_CENTER_X, CLOCK_CENTER_Y, CENTER_KNOB_R, true, CENTER_KNOB_COLOR);
     glBegin(GL_QUADS);
         glVertex2f(-CENTER_KNOB_W + CLOCK_CENTER_X,-CENTER_KNOB_W + CLOCK_CENTER_Y);
         glVertex2f(CENTER_KNOB_W + CLOCK_CENTER_X,-CENTER_KNOB_W + CLOCK_CENTER_Y);
         glVertex2f(CENTER_KNOB_W + CLOCK_CENTER_X,CENTER_KNOB_W + CLOCK_CENTER_Y);
         glVertex2f(-CENTER_KNOB_W + CLOCK_CENTER_X,CENTER_KNOB_W + CLOCK_CENTER_Y);
     glEnd();
-
 }
 
 float getTimeAngle(float t, float div){
@@ -206,7 +228,6 @@ void drawPendulum(){
     float jointCenterX = CLOCK_CENTER_X;
     float jointCenterY = CLOCK_CENTER_Y - CLOCK_OUTER_RADIUS;
 
-    drawCircle(jointCenterX, jointCenterY, JOINT_RADIUS, true);
 
 
     float angle = angleAtTime((float)time_ / 1000.) ;
@@ -217,9 +238,11 @@ void drawPendulum(){
         bobCenterX,
         bobCenterY,
         BOB_RADIUS, 
-        true
+        true,
+        BOB_COLOR
     );
     drawRod(jointCenterX, jointCenterY, bobCenterX, bobCenterY, ROD_WIDTH);
+    drawCircle(jointCenterX, jointCenterY, JOINT_RADIUS, true, JOIN_COLOR);
 
 }
 
@@ -259,6 +282,7 @@ void drawHands(){
 
     float hourAngle = getTimeAngle(hour + (float)minute / 60.0f , 6);
     
+    glColor3fv(HANDS_COLOR);
     // std::cout << "hour " << hour << "hour angle : " << hourAngle << "\n";
     drawHand(hourAngle, HOUR_LEN, H_TR_HEIGHT, HOUR_WIDTH);
 
@@ -276,15 +300,35 @@ void drawHands(){
 
 }
 
+void drawOuterBody(){
+    float spx = xFromAngle(OUTER_BODY_START_ANGLE, CLOCK_OUTER_RADIUS, CLOCK_CENTER_X);
+    float spy = yFromAngle(OUTER_BODY_START_ANGLE, CLOCK_OUTER_RADIUS, CLOCK_CENTER_Y);
+
+    float epx = xFromAngle(OUTER_BODY_START_ANGLE - OUTER_BODY_SPAN, CLOCK_OUTER_RADIUS, CLOCK_CENTER_X);
+    float epy = yFromAngle(OUTER_BODY_START_ANGLE - OUTER_BODY_SPAN, CLOCK_OUTER_RADIUS, CLOCK_CENTER_Y);
+
+    glBegin(GL_POLYGON);
+        glColor3fv(OUTER_BODY_COLOR);
+        glVertex2f(spx, spy);
+        glVertex2f(spx, spy - OUTER_BODY_H);
+        glVertex2f(epx, spy - OUTER_BODY_H);
+        glVertex2f(epx, epy);
+
+    glEnd();
+
+}
+
 
 void display(){
     glClear(GL_COLOR_BUFFER_BIT);
+    drawOuterBody();
+    drawClock();
+    drawHands();
+    drawCenterKnob();
     // pendulum
     drawPendulum();
     // hands
-    drawHands();
     // clock body
-    drawClock();
 
     glutSwapBuffers();
 }
@@ -292,7 +336,7 @@ void display(){
 int main(int argc, char** argv){
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE); 
-    glutInitWindowSize(500, 500);
+    glutInitWindowSize(600, 600);
     glutInitWindowPosition(100, 100);
     glutCreateWindow("Clock");
     glutDisplayFunc(display);
