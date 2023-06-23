@@ -10,7 +10,7 @@ void initGL() {
     glEnable(GL_DEPTH_TEST);   // Enable depth testing for z-culling
 }
 
-const float rotationRate = .1;
+const float rotationRate = .05;
 const float movementRate = .1;
 
 struct point {
@@ -47,10 +47,15 @@ void normalize(point& p){
     }
 }
 
-point eye = {0, 0 , 4};
-point look = {0, 0, -1};
-point right = {1, 0, 0};
-point up = {0, 1, 0};
+// point eye = {0, 0 , 4};
+point eyePos = {2.56357 ,1.91455, 2.92836};
+
+// point look = {0, 0, -1};
+point look = {-0.615372 ,-0.337015 ,-0.712558};
+// point right = {1, 0, 0};
+point right = {0.759506 ,-0.0116736, -0.650395};
+// point up = {0, 1, 0};
+point up = {-0.210875 ,0.941427 ,-0.263148};
 
 // Global variables
 GLfloat eyex = 1, eyey = 2, eyez = 2;
@@ -78,12 +83,11 @@ float sphereColors[][3] = {
     {0, 1, 1}
 };
 
-float cylinderColor[3] = {.4, .2, .1};
+float cylinderColor[3] = {0.31, 0.365, 0.184};
 
 
 
 int rotAngleY = 0;
-int rotAngleX = 0;
 float scale = 1;
 float scaleInc = .01;
 double dist = (1.0 / 3);
@@ -102,29 +106,6 @@ std::vector<std::vector<point>> buildUnitPositiveX(int);
 auto x = buildUnitPositiveX(5);
 
 
-
-/* Draw axes: X in Red, Y in Green and Z in Blue */
-void drawAxes() {
-    glLineWidth(3);
-    glBegin(GL_LINES);
-        glColor3f(1,0,0);   // Red
-        // X axis
-        glVertex3f(0,0,0);
-        glVertex3f(1,0,0);
-
-        glColor3f(0,1,0);   // Green
-        // Y axis
-        glVertex3f(0,0,0);
-        glVertex3f(0,1,0);
-
-        glColor3f(0,0,1);   // Blue
-        // Z axis
-        glVertex3f(0,0,0);
-        glVertex3f(0,0,1);
-    glEnd();
-}
-
-
 void drawTriangle(int colorIndex){
     glBegin(GL_TRIANGLES);
         glColor3fv(planeColors[colorIndex]);
@@ -140,7 +121,6 @@ void drawPlane(int angle, point rotV, int colorIndex){
     glPushMatrix();
         glRotatef(angle, rotV.x, rotV.y, rotV.z);
         glTranslatef(t.x, t.y, t.z);
-        // glTranslatef(dist - scale * dist, dist - scale * dist, dist - scale * dist);
         glScaled(scale,scale,scale);
         drawTriangle(colorIndex);
     glPopMatrix();
@@ -240,11 +220,9 @@ void drawSides(){
         glRotatef(90, 0, 1, 0);
 
     glPopMatrix();
-
-
 }
 
-
+// reference : https://www.songho.ca/opengl/gl_sphere.html
 std::vector<std::vector<point>> buildUnitPositiveX(int subdivision)
 {
     const float DEG2RAD = acos(-1) / 180.0f;
@@ -308,7 +286,7 @@ std::vector<std::vector<point>> buildUnitPositiveX(int subdivision)
 }
 
 
-void drawSphereSide(int colorIndex){
+void drawSpherePortion(int colorIndex){
     glPushMatrix();
         glColor3fv(sphereColors[colorIndex]);
         glTranslatef(scale, 0, 0);
@@ -330,20 +308,20 @@ void drawSphereSide(int colorIndex){
 
 void drawSpheres(){
     glPushMatrix();
-        drawSphereSide(0);
+        drawSpherePortion(0);
         glRotatef(90, 0, 1, 0);
-        drawSphereSide(1);
+        drawSpherePortion(1);
         glRotatef(90, 0, 1, 0);
-        drawSphereSide(2);
+        drawSpherePortion(2);
         glRotatef(90, 0, 1, 0);
-        drawSphereSide(3);
+        drawSpherePortion(3);
         glRotatef(90, 0, 1, 0);
         
         glRotatef(90, 0, 0, 1);
 
-        drawSphereSide(4);
+        drawSpherePortion(4);
         glRotatef(-180, 0, 0, 1);
-        drawSphereSide(5);
+        drawSpherePortion(5);
     glPopMatrix();
 }
 
@@ -357,8 +335,8 @@ void display() {
     // gluLookAt(0,0,0, 0,0,-100, 0,1,0);
 
     // control viewing (or camera)
-    gluLookAt(eye.x, eye.y, eye.z,
-              eye.x + look.x, eye.y + look.y, eye.z + look.z,
+    gluLookAt(eyePos.x, eyePos.y, eyePos.z,
+              eyePos.x + look.x, eyePos.y + look.y, eyePos.z + look.z,
               up.x, up.y, up.z);
     
     glPushMatrix();
@@ -366,7 +344,7 @@ void display() {
         // glRotatef(rotAngleX, 1, 0, 0);
 
 
-        drawAxes();
+        // drawAxes();
         drawOctaHedral();
         drawSides();
         drawSpheres();
@@ -419,11 +397,13 @@ void keyboard(unsigned char key, int x, int y) {
     case 'd':
         rotAngleY -= 5;
         break;
-    case '1':
-        rotateVector(up, look, -rotationRate);
-        break;
     case '2':
+        rotateVector(up, look, -rotationRate);
+        rotateVector(up, right, -rotationRate);
+        break;
+    case '1':
         rotateVector(up, look, rotationRate);
+        rotateVector(up, right, rotationRate);
         break;
     case '3':
         rotateVector(right, look, rotationRate);
@@ -441,16 +421,6 @@ void keyboard(unsigned char key, int x, int y) {
         rotateVector(look, right, -rotationRate);
         rotateVector(look, up, -rotationRate);
         break;
-    // case 'w':
-    //     prev = eye + look;
-    //     eye = eye + up * movementRate;
-    //     // look =  prev - eye;
-    //     // normalize(look);
-    //     break;
-    // case 's':
-    //     rotateVector(look, right, rotationRate);
-    //     rotateVector(look, up, rotationRate);
-    //     break;
     default:
         break;
     }
@@ -464,22 +434,22 @@ void special(int key, int x, int y) {
     switch(key) {
     
     case GLUT_KEY_LEFT:
-        eye = eye - right * movementRate;
+        eyePos = eyePos - right * movementRate;
         break;
     case GLUT_KEY_RIGHT:
-        eye = eye + right * movementRate;
+        eyePos = eyePos + right * movementRate;
         break;
     case GLUT_KEY_UP:
-        eye = eye + look * movementRate;
+        eyePos = eyePos + look * movementRate;
         break;
     case GLUT_KEY_DOWN:
-        eye = eye - look * movementRate;
+        eyePos = eyePos - look * movementRate;
         break;
     case GLUT_KEY_PAGE_UP:
-        eye = eye + up * movementRate;
+        eyePos = eyePos + up * movementRate;
         break;
     case GLUT_KEY_PAGE_DOWN:
-        eye = eye - up * movementRate;
+        eyePos = eyePos - up * movementRate;
         break;
     }
     glutPostRedisplay();
