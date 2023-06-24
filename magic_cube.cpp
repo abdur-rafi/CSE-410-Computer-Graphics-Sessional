@@ -294,12 +294,8 @@ std::vector<std::vector<point>> buildUnitPositiveX(int subdivision)
 }
 
 
-void drawSpherePortion(int colorIndex){
-    glPushMatrix();
-        glColor3fv(sphereColors[colorIndex]);
-        glTranslatef(scale, 0, 0);
-        glScalef((1-scale) / sqrt(3) , (1-scale) / sqrt(3), (1-scale) / sqrt(3));
-        glBegin(GL_QUADS);
+void drawUnitSphere(){
+    glBegin(GL_QUADS);
         int n = x.size();
         for(int i = 0; i + 1 < n; ++i){
             int m = x[i].size();
@@ -310,7 +306,15 @@ void drawSpherePortion(int colorIndex){
                 glVertex3f(x[i][j+1].x, x[i][j+1].y,x[i][j+1].z);
             }
         }
-        glEnd();
+    glEnd();
+}
+
+void drawSpherePortion(int colorIndex){
+    glPushMatrix();
+        glColor3fv(sphereColors[colorIndex]);
+        glTranslatef(scale, 0, 0);
+        glScalef((1-scale) / sqrt(3) , (1-scale) / sqrt(3), (1-scale) / sqrt(3));
+        drawUnitSphere();
     glPopMatrix();
 }
 
