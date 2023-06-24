@@ -12,6 +12,7 @@ void initGL() {
 
 const float rotationRate = .05;
 const float movementRate = .1;
+
 struct point {
     GLfloat x, y, z;
 
@@ -46,10 +47,6 @@ void normalize(point& p){
     }
 }
 
-float magnitude(const point &p){
-    return sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
-}
-
 // point eye = {0, 0 , 4};
 point eyePos = {2.56357 ,1.91455, 2.92836};
 
@@ -59,11 +56,6 @@ point look = {-0.615372 ,-0.337015 ,-0.712558};
 point right = {0.759506 ,-0.0116736, -0.650395};
 // point up = {0, 1, 0};
 point up = {-0.210875 ,0.941427 ,-0.263148};
-
-point ws = {0, .2, 0};
-
-
-float distFromCenter = sqrt(magnitude(eyePos));
 
 // Global variables
 GLfloat eyex = 1, eyey = 2, eyez = 2;
@@ -344,7 +336,7 @@ void display() {
 
     // control viewing (or camera)
     gluLookAt(eyePos.x, eyePos.y, eyePos.z,
-              eyePos.x + distFromCenter * look.x, eyePos.y + distFromCenter * look.y, eyePos.z + distFromCenter * look.z,
+              eyePos.x + look.x, eyePos.y + look.y, eyePos.z + look.z,
               up.x, up.y, up.z);
     
     glPushMatrix();
@@ -391,7 +383,7 @@ void reshapeListener(GLsizei width, GLsizei height) {  // GLsizei for non-negati
 void keyboard(unsigned char key, int x, int y) {
     // key is the char pressed, e.g., 'a' or 27 for ESC
     // (x, y) is the mouse location in Windows' coordinates
-    point prev, t1, t2, center;
+    point prev;
     switch (key) {
     case '.':
         scale = fmin(scale + scaleInc, 1);
@@ -429,24 +421,6 @@ void keyboard(unsigned char key, int x, int y) {
         rotateVector(look, right, -rotationRate);
         rotateVector(look, up, -rotationRate);
         break;
-    case 'w':
-        // center = eyePos + look * distFromCenter;
-        look = look * distFromCenter - ws;
-        distFromCenter = magnitude(look);
-        normalize(look);
-        eyePos = eyePos + ws;
-        up = crossProduct(right, look);
-        break;
-        
-    case 's':
-        // center = eyePos + look * distFromCenter;
-        look = look * distFromCenter + ws;
-        distFromCenter = magnitude(look);
-        normalize(look);
-        eyePos = eyePos - ws;
-        up = crossProduct(right, look);
-        break;
-
     default:
         break;
     }
