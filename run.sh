@@ -1,2 +1,2 @@
-g++ offline2.cpp -o offline
+g++ offline2.cpp -g -o offline
 ./offline

@@ -22,10 +22,12 @@ class Matrix{
 
 public:
     Matrix(){
+        // cout << "in constructor\n";
         shape = {4, 4};
         allocateMat(4, 4);
     }
     Matrix(int r, int c){
+        // cout << "in constructor\n";
         shape = {r, c};
         allocateMat(r, c);
     }
@@ -35,6 +37,7 @@ public:
         }
     }
     Matrix(const Matrix &mt){
+        // cout << "in copy constructor\n";
         shape = mt.shape;
         allocateMat(mt.shape.first, mt.shape.second);
         for(int i = 0; i < mt.shape.first; ++i){
@@ -52,6 +55,7 @@ public:
     }
 
     ~Matrix(){
+        // cout << "in destructor\n";
         deallocate();
     }
 
@@ -85,7 +89,7 @@ public:
     }
 
     bool assignToCol(int c, const vector<double> &v){
-        if(c > shape.second || v.size() < shape.first){
+        if(c >= shape.second || v.size() < shape.first){
             cout << "invalid params\n";
             return false;
         }
@@ -113,15 +117,20 @@ public:
         return mt;
     }
 
-    Matrix operator=(const Matrix &m){
-        Matrix mt(m.shape.first, m.shape.second);
+    void operator=(const Matrix &m){
+        // cout << "in equal op\n";
+
+        // Matrix mt(m.shape.first, m.shape.second);
         // shape = m.shape;
         // allocateMat(shape.first, shape.second);
+        deallocate();
+        shape = m.shape;
+        allocateMat(shape.first, shape.second);
         for(int i = 0; i < m.shape.first; ++i){
             for(int j = 0;j < m.shape.second; ++j)
-                mt.mat[i][j] = m.mat[i][j];
+                mat[i][j] = m.mat[i][j];
         }
-        return mt;
+        // return *this;
     }
 
     void deallocate(){
@@ -140,8 +149,10 @@ public:
             for(int j = 0; j < res.shape.second; ++j){
                 double r = 0;
                 for(int k = 0; k < shape.second; ++k){
-                    r += res.mat[i][k] * m.mat[k][j];
+                    r += this->mat[i][k] * m.mat[k][j];
+                    // cout << "sdf";
                 }
+                // cout << "r : " << r << "\n";
                 res.set(i, j, r);
             }
         }
@@ -163,13 +174,25 @@ public:
 
 class Printer{
 public:
-    static void print(const Matrix& m, const pair<int,int>& to, ostream& o){
-        for(int i = 0; i < to.first; ++i){
-            for(int j = 0; j < to.second; ++j){
-                o << m.mat[i][j] << " ";
+    static void print(const Matrix& m, const pair<int,int>& to, ostream& o, bool colWise = false){
+        if(!colWise){
+
+            for(int i = 0; i < to.first; ++i){
+                for(int j = 0; j < to.second; ++j){
+                    o << m.mat[i][j] << " ";
+                }
+                o << "\n";
             }
-            o << "\n";
         }
+        else{
+            for(int i = 0; i < to.second; ++i){
+                for(int j = 0; j < to.first; ++j){
+                    o << m.mat[j][i] << " ";
+                }
+                o << "\n";
+            }
+        }
+        o << "\n";
     }
 };
 
@@ -218,16 +241,18 @@ class Solver{
     
 
     Matrix triangleMat(point &p1, point &p2, point &p3){
-        Matrix mt(4, true);
-        mt.assignToRow(0, {p1.x, p1.y, p1.z, 0});
-        mt.assignToRow(1, {p2.x, p2.y, p2.z, 0});
-        mt.assignToRow(2, {p3.x, p3.y, p3.z, 0});
+        Matrix mt(4,3);
+        mt.assignToCol(0, {p1.x, p1.y, p1.z, 1});
+        mt.assignToCol(1, {p2.x, p2.y, p2.z, 1});
+        mt.assignToCol(2, {p3.x, p3.y, p3.z, 1});
+        // Printer::print(mt, {3, 3}, cout);
         return mt;
     }
 
     Matrix translateMatrix(point &p1){
         Matrix mt(4, true);
-        mt.assignToCol(4, {p1.x, p1.y, p1.z, 1});
+        mt.assignToCol(3, {p1.x, p1.y, p1.z, 1});
+        // Printer::print(mt, {4, 4}, cout);
         return mt;
     }
 
@@ -300,8 +325,10 @@ public:
                 readTriplet(p3, s); 
                 Matrix tr = triangleMat(p1, p2, p3);
                 tr = curr * tr;
-                tr = tr * (1. / tr.get(3, 3));
-                Printer::print(tr, {3, 3}, o);
+                // tr = tr * (1. / tr.get(3, 3));
+                // Printer::print(tr, {4, 4}, cout);
+                // Printer::print(curr, {4, 4}, cout);
+                Printer::print(tr, {4, 3}, o, true);
                 // cout << tr.get(3, 3) << "\n";
                 
             }
@@ -313,25 +340,29 @@ public:
                 readTriplet(p1, s);
                 Matrix mt = scaleMatrix(p1);
                 // Printer::print(curr, {4,4}, cout);
-                curr = mt * curr;
+                curr = curr * mt;
+                // curr = mt * curr;
                 // Printer::print(curr, {4,4}, cout);
             }
             else if(command == "translate"){
                 point p1;
                 readTriplet(p1, s);
                 Matrix mt = translateMatrix(p1);
-                curr = mt * curr;
+                Printer::print(curr, {4,4}, cout, false);
+                curr = curr * mt;
+                Printer::print(curr, {4,4}, cout, false);
             }
             else if(command == "rotate"){
                 point p1;
                 double angle;
                 s >> angle;
                 readTriplet(p1, s);
-                Printer::print(curr, {4,4}, cout);
-                Matrix mt = rotationMatrix(angle, p1);
-                curr = mt * curr;
-                Printer::print(mt, {4,4}, cout);
-                Printer::print(curr, {4,4}, cout);
+                // Printer::print(curr, {4,4}, cout);
+                Matrix mt = rotationMatrix(angle * (M_PI / 180.), p1);
+                curr = curr * mt;
+                // curr = mt * curr;
+                // Printer::print(mt, {4,4}, cout);
+                // Printer::print(curr, {4,4}, cout);
             }
             else if(command == "pop"){
                 if(!st.empty()){
@@ -349,7 +380,11 @@ public:
 
 
 int main(){
-    Matrix m;
-    Solver solve("./TestCases/1", ".");
+    // Matrix m;
+    // Printer::print(m, {3, 3}, cout);
+    // Matrix m2 = m;
+    // m.set(1, 2, 4);
+    // m2 = m;
+    Solver solve("./TestCases/4", ".");
     // cout << m.shape.first << " " << m.shape.second << "\n";
 }
