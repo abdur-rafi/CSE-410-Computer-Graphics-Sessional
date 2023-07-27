@@ -5,18 +5,19 @@
 #include <stack>
 #include <fstream>
 #include <math.h>
+#include <iomanip>
 
 using namespace std;
 
 
 class Matrix{
     pair<int, int> shape;
-    double** mat;
+    long double** mat;
 
     void allocateMat(int r, int c){
-        mat = new double*[r];
+        mat = new long double*[r];
         for(int i = 0; i < r; ++i){
-            mat[i] = new double[c];
+            mat[i] = new long double[c];
         }
     }
 
@@ -31,7 +32,7 @@ public:
         shape = {r, c};
         allocateMat(r, c);
     }
-    Matrix(int r, int c, const vector<double> &v):Matrix(r, c){
+    Matrix(int r, int c, const vector<long double> &v):Matrix(r, c){
         for(int i = 0; i < r * c; ++i){
             mat[i / c][i % c] = v[i];
         }
@@ -48,7 +49,7 @@ public:
     }
     Matrix(int r) : Matrix(r, r){}
 
-    Matrix(int r, const vector<double> &v) : Matrix(r, r, v) {}
+    Matrix(int r, const vector<long double> &v) : Matrix(r, r, v) {}
 
     Matrix(int r, bool identity) : Matrix(r){
         if(identity) makeIdentity();
@@ -77,7 +78,7 @@ public:
         return true;
     }
 
-    bool assignToRow(int r, const vector<double> &v){
+    bool assignToRow(int r, const vector<long double> &v){
         if(r > shape.first || v.size() < shape.second){
             cout << "invalid params\n";
             return false;
@@ -88,7 +89,7 @@ public:
         return true;
     }
 
-    bool assignToCol(int c, const vector<double> &v){
+    bool assignToCol(int c, const vector<long double> &v){
         if(c >= shape.second || v.size() < shape.first){
             cout << "invalid params\n";
             return false;
@@ -99,7 +100,7 @@ public:
         return true;
     }
 
-    bool set(int i, int j, double val){
+    bool set(int i, int j, long double val){
         if(i >= shape.first || j >= shape.second){
             cout << "invalid params\n";
             return false;
@@ -108,7 +109,7 @@ public:
         return true;
     }
 
-    Matrix operator*(double s){
+    Matrix operator*(long double s){
         Matrix mt(this->shape.first, this->shape.second);
         for(int i = 0; i < shape.first; ++i){
             for(int j = 0; j < shape.second; ++j)
@@ -147,7 +148,7 @@ public:
         }
         for(int i = 0; i < res.shape.first; ++i){
             for(int j = 0; j < res.shape.second; ++j){
-                double r = 0;
+                long double r = 0;
                 for(int k = 0; k < shape.second; ++k){
                     r += this->mat[i][k] * m.mat[k][j];
                     // cout << "sdf";
@@ -160,12 +161,37 @@ public:
         return res;
     }
     
-    double get(int i, int j){
+    long double get(int i, int j){
         if(i >= shape.first || j >= shape.second){
             cout << "Out of index\n";
             return -1;
         }
         return mat[i][j];
+    }
+
+    vector<long double> getRow(int i){
+        if (i >= shape.first){
+            printf("out of index\n");
+            return {0};
+        }
+        vector<long double> v;
+        for(int j = 0; j < shape.second; ++j)
+            v.push_back(mat[i][j]);
+        return v;
+    }
+    vector<long double> getCol(int i){
+        if (i >= shape.second){
+            printf("out of index\n");
+            return {0};
+        }
+        vector<long double> v;
+        for(int j = 0; j < shape.first; ++j)
+            v.push_back(mat[j][i]);
+        return v;
+    }
+
+    pair<int,int> getShape(){
+        return shape;
     }
 
     friend class Printer;
@@ -175,10 +201,13 @@ public:
 class Printer{
 public:
     static void print(const Matrix& m, const pair<int,int>& to, ostream& o, bool colWise = false){
+        o << fixed << showpoint;
+        o << setprecision(7);
         if(!colWise){
 
             for(int i = 0; i < to.first; ++i){
                 for(int j = 0; j < to.second; ++j){
+                    
                     o << m.mat[i][j] << " ";
                 }
                 o << "\n";
@@ -198,7 +227,7 @@ public:
 
 class point {
 public:
-    double x, y, z;
+    long double x, y, z;
     point operator*(float s) const{
         point t = {x * s, y * s, z * s};
         return t;
@@ -219,20 +248,21 @@ point crossProduct(const point& p1, const point& p2){
 }
 
 void normalize(point& p){
-    double mag = sqrt(p.x  * p.x + p.y * p.y + p.z * p.z);
-    if(mag > 1e-7){
+    long double mag = sqrt(p.x  * p.x + p.y * p.y + p.z * p.z);
+    if(mag > 1e-8){
         p = p * (1. / mag);
     }
 }
 
-double dotProduct(const point &p1,const point &p2){
+long double dotProduct(const point &p1,const point &p2){
     return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
 }
 
 class Solver{
     string inpPath, outPath;
     point eye,look,up;
-    double fovY, ar, near, far;
+    long double fovY, ar, near, far;
+    int trCount = 0;
 
     void readTriplet(point& x, ifstream& s){
         s >> x.x >> x.y >> x.z;
@@ -264,7 +294,7 @@ class Solver{
         return mt;
     }
     
-    point rodriguesFormula(point x, point a, double angle){
+    point rodriguesFormula(point x, point a, long double angle){
         point rt, cp;
         rt = x * cos(angle);
         rt = rt +  a * ((1 - cos(angle)) * dotProduct(a, x));
@@ -273,7 +303,7 @@ class Solver{
         return rt;
     }
 
-    Matrix rotationMatrix(double angle, point& p1){
+    Matrix rotationMatrix(long double angle, point& p1){
         point axis = p1;
         normalize(axis);
         point c1 = rodriguesFormula({1, 0, 0}, axis, angle);
@@ -285,6 +315,18 @@ class Solver{
         mt.assignToCol(2, {c3.x, c3.y, c3.z, 0});
         return mt;
     }
+
+    void scaleCol(Matrix &m, int i){
+        // cout << m.getShape().first << " " << m.getShape().second << "\n";
+        vector<long double> v = m.getCol(i);
+        long double val = m.get(m.getShape().first - 1, i);
+        for(int i = 0; i < v.size(); ++i)
+            if(abs(val) > (1e-7))
+                v[i] /=  val;
+        
+        m.assignToCol(i, v);
+    }
+
 
 
 public:
@@ -308,12 +350,87 @@ public:
         scene >> fovY >> ar >> near >> far;
 
         modellingTransformation(scene, of);
+        of.close();
+        scene.close();
+        ifstream stage1_i;
+        stage1_i.open(outputPath + "/stage1.txt", ios::in);
+        ofstream stage2_o;
+        stage2_o.open(outPath + "/stage2.txt", ios::out);
+        viewTransformation(stage1_i, stage2_o);
+        stage1_i.close();
+        stage2_o.close();
+
+        ifstream stage2_i;
+        stage2_i.open(outputPath + "/stage2.txt", ios::in);
+        ofstream stage3_o;
+        stage3_o.open(outPath + "/stage3.txt", ios::out);
+        projectionTransformation(stage2_i, stage3_o);
+        stage2_i.close();
+        stage3_o.close();
+
+        
+    }
+
+    void viewTransformation(ifstream &s, ofstream &o){
+        point l = look - eye;
+        normalize(l);
+        point r = crossProduct(l, up);
+        normalize(r);
+        point u = crossProduct(r, l);
+        Matrix T(4, true);
+        T.assignToCol(3, {-eye.x, - eye.y, -eye.z, 1});
+        Matrix R(4, true);
+        R.assignToRow(0, {r.x, r.y, r.z, 0});
+        R.assignToRow(1, {u.x, u.y, u.z, 0});
+        R.assignToRow(2, {-l.x, -l.y, -l.z, 0});
+        Matrix V = R * T;
+
+        int k = trCount;
+        while(k--){
+            Matrix tr = triangleMatFromFile(s);
+            tr = V * tr;
+            // cout << tr.getShape().second << "\n";
+            
+            Printer::print(tr, {3,3}, o, true);
+        }
+    }
+
+    void projectionTransformation(ifstream &s, ofstream &o){
+        long double fovX = fovY * ar;
+        long double t = near * tan((fovY / 2.) * (M_PI / 180.));
+        long double r = near * tan((fovX / 2.) * (M_PI / 180.));
+        Matrix P(4);
+        P.assignToRow(0, {near/r, 0, 0, 0});
+        P.assignToRow(1, {0, near / r, 0, 0});
+        P.assignToRow(2, {0, 0, -(far + near) / (far - near) , (-2*far*near)/(far - near)});
+        P.assignToRow(3, {0, 0, -1 , 0});
+
+        int k = trCount;
+
+        while(k--){
+            Matrix tr = triangleMatFromFile(s);
+            tr = P * tr;
+            scaleCol(tr, 0);
+            scaleCol(tr, 1);
+            scaleCol(tr, 2);
+            Printer::print(tr, {3,3}, o, true);
+        }
+    }
+
+    Matrix triangleMatFromFile(ifstream &s){
+        point p1,p2,p3;
+        readTriplet(p1, s);
+        readTriplet(p2, s);
+        readTriplet(p3, s); 
+        return triangleMat(p1, p2, p3);
+
     }
 
     void modellingTransformation(ifstream &s, ofstream &o){
         stack<Matrix> st;
         Matrix curr(4, true);
         st.push(curr);
+        vector<Matrix> triangles;
 
         string command;
         while(s.peek() != EOF){
@@ -328,7 +445,8 @@ public:
                 // tr = tr * (1. / tr.get(3, 3));
                 // Printer::print(tr, {4, 4}, cout);
                 // Printer::print(curr, {4, 4}, cout);
-                Printer::print(tr, {4, 3}, o, true);
+                Printer::print(tr, {3, 3}, o, true);
+                ++trCount;
                 // cout << tr.get(3, 3) << "\n";
                 
             }
@@ -348,13 +466,13 @@ public:
                 point p1;
                 readTriplet(p1, s);
                 Matrix mt = translateMatrix(p1);
-                Printer::print(curr, {4,4}, cout, false);
+                // Printer::print(curr, {4,4}, cout, false);
                 curr = curr * mt;
-                Printer::print(curr, {4,4}, cout, false);
+                // Printer::print(curr, {4,4}, cout, false);
             }
             else if(command == "rotate"){
                 point p1;
-                double angle;
+                long double angle;
                 s >> angle;
                 readTriplet(p1, s);
                 // Printer::print(curr, {4,4}, cout);
@@ -374,7 +492,7 @@ public:
                 break;
             }
         }
-        cout << "file parsed";
+        // cout << "file parsed\n";
     }
 };
 
@@ -385,6 +503,6 @@ int main(){
     // Matrix m2 = m;
     // m.set(1, 2, 4);
     // m2 = m;
-    Solver solve("./TestCases/4", ".");
+    Solver solve("./TestCases/1", ".");
     // cout << m.shape.first << " " << m.shape.second << "\n";
 }
