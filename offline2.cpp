@@ -12,12 +12,12 @@ using namespace std;
 
 class Matrix{
     pair<int, int> shape;
-    long double** mat;
+    double** mat;
 
     void allocateMat(int r, int c){
-        mat = new long double*[r];
+        mat = new double*[r];
         for(int i = 0; i < r; ++i){
-            mat[i] = new long double[c];
+            mat[i] = new double[c];
         }
     }
 
@@ -32,7 +32,7 @@ public:
         shape = {r, c};
         allocateMat(r, c);
     }
-    Matrix(int r, int c, const vector<long double> &v):Matrix(r, c){
+    Matrix(int r, int c, const vector<double> &v):Matrix(r, c){
         for(int i = 0; i < r * c; ++i){
             mat[i / c][i % c] = v[i];
         }
@@ -49,7 +49,7 @@ public:
     }
     Matrix(int r) : Matrix(r, r){}
 
-    Matrix(int r, const vector<long double> &v) : Matrix(r, r, v) {}
+    Matrix(int r, const vector<double> &v) : Matrix(r, r, v) {}
 
     Matrix(int r, bool identity) : Matrix(r){
         if(identity) makeIdentity();
@@ -78,7 +78,7 @@ public:
         return true;
     }
 
-    bool assignToRow(int r, const vector<long double> &v){
+    bool assignToRow(int r, const vector<double> &v){
         if(r > shape.first || v.size() < shape.second){
             cout << "invalid params\n";
             return false;
@@ -89,7 +89,7 @@ public:
         return true;
     }
 
-    bool assignToCol(int c, const vector<long double> &v){
+    bool assignToCol(int c, const vector<double> &v){
         if(c >= shape.second || v.size() < shape.first){
             cout << "invalid params\n";
             return false;
@@ -100,7 +100,7 @@ public:
         return true;
     }
 
-    bool set(int i, int j, long double val){
+    bool set(int i, int j, double val){
         if(i >= shape.first || j >= shape.second){
             cout << "invalid params\n";
             return false;
@@ -109,7 +109,7 @@ public:
         return true;
     }
 
-    Matrix operator*(long double s){
+    Matrix operator*(double s){
         Matrix mt(this->shape.first, this->shape.second);
         for(int i = 0; i < shape.first; ++i){
             for(int j = 0; j < shape.second; ++j)
@@ -148,7 +148,7 @@ public:
         }
         for(int i = 0; i < res.shape.first; ++i){
             for(int j = 0; j < res.shape.second; ++j){
-                long double r = 0;
+                double r = 0;
                 for(int k = 0; k < shape.second; ++k){
                     r += this->mat[i][k] * m.mat[k][j];
                     // cout << "sdf";
@@ -161,7 +161,7 @@ public:
         return res;
     }
     
-    long double get(int i, int j){
+    double get(int i, int j){
         if(i >= shape.first || j >= shape.second){
             cout << "Out of index\n";
             return -1;
@@ -169,22 +169,22 @@ public:
         return mat[i][j];
     }
 
-    vector<long double> getRow(int i){
+    vector<double> getRow(int i){
         if (i >= shape.first){
             printf("out of index\n");
             return {0};
         }
-        vector<long double> v;
+        vector<double> v;
         for(int j = 0; j < shape.second; ++j)
             v.push_back(mat[i][j]);
         return v;
     }
-    vector<long double> getCol(int i){
+    vector<double> getCol(int i){
         if (i >= shape.second){
             printf("out of index\n");
             return {0};
         }
-        vector<long double> v;
+        vector<double> v;
         for(int j = 0; j < shape.first; ++j)
             v.push_back(mat[j][i]);
         return v;
@@ -201,14 +201,12 @@ public:
 class Printer{
 public:
     static void print(const Matrix& m, const pair<int,int>& to, ostream& o, bool colWise = false){
-        o << fixed << showpoint;
-        o << setprecision(7);
+        // o << fixed ;
         if(!colWise){
 
             for(int i = 0; i < to.first; ++i){
                 for(int j = 0; j < to.second; ++j){
-                    
-                    o << m.mat[i][j] << " ";
+                    o << fixed << setprecision(7) << m.mat[i][j] << " ";
                 }
                 o << "\n";
             }
@@ -216,7 +214,7 @@ public:
         else{
             for(int i = 0; i < to.second; ++i){
                 for(int j = 0; j < to.first; ++j){
-                    o << m.mat[j][i] << " ";
+                    o << fixed << setprecision(7) << m.mat[j][i] << " ";
                 }
                 o << "\n";
             }
@@ -227,7 +225,7 @@ public:
 
 class point {
 public:
-    long double x, y, z;
+    double x, y, z;
     point operator*(float s) const{
         point t = {x * s, y * s, z * s};
         return t;
@@ -248,20 +246,23 @@ point crossProduct(const point& p1, const point& p2){
 }
 
 void normalize(point& p){
-    long double mag = sqrt(p.x  * p.x + p.y * p.y + p.z * p.z);
+    double mag = sqrt(p.x  * p.x + p.y * p.y + p.z * p.z);
     if(mag > 1e-8){
-        p = p * (1. / mag);
+        // p = p * (1. / mag);
+        p.x /= mag;
+        p.y /= mag;
+        p.z /= mag;
     }
 }
 
-long double dotProduct(const point &p1,const point &p2){
+double dotProduct(const point &p1,const point &p2){
     return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
 }
 
 class Solver{
     string inpPath, outPath;
     point eye,look,up;
-    long double fovY, ar, near, far;
+    double fovY, ar, near, far;
     int trCount = 0;
 
     void readTriplet(point& x, ifstream& s){
@@ -294,7 +295,7 @@ class Solver{
         return mt;
     }
     
-    point rodriguesFormula(point x, point a, long double angle){
+    point rodriguesFormula(point x, point a, double angle){
         point rt, cp;
         rt = x * cos(angle);
         rt = rt +  a * ((1 - cos(angle)) * dotProduct(a, x));
@@ -303,7 +304,7 @@ class Solver{
         return rt;
     }
 
-    Matrix rotationMatrix(long double angle, point& p1){
+    Matrix rotationMatrix(double angle, point& p1){
         point axis = p1;
         normalize(axis);
         point c1 = rodriguesFormula({1, 0, 0}, axis, angle);
@@ -318,8 +319,8 @@ class Solver{
 
     void scaleCol(Matrix &m, int i){
         // cout << m.getShape().first << " " << m.getShape().second << "\n";
-        vector<long double> v = m.getCol(i);
-        long double val = m.get(m.getShape().first - 1, i);
+        vector<double> v = m.getCol(i);
+        double val = m.get(m.getShape().first - 1, i);
         for(int i = 0; i < v.size(); ++i)
             if(abs(val) > (1e-7))
                 v[i] /=  val;
@@ -349,29 +350,24 @@ public:
         readTriplet(up, scene);
         scene >> fovY >> ar >> near >> far;
 
-        modellingTransformation(scene, of);
+        auto trs = modellingTransformation(scene, of);
         of.close();
         scene.close();
         ifstream stage1_i;
-        stage1_i.open(outputPath + "/stage1.txt", ios::in);
         ofstream stage2_o;
         stage2_o.open(outPath + "/stage2.txt", ios::out);
-        viewTransformation(stage1_i, stage2_o);
-        stage1_i.close();
+        viewTransformation(trs, stage2_o);
         stage2_o.close();
 
-        ifstream stage2_i;
-        stage2_i.open(outputPath + "/stage2.txt", ios::in);
         ofstream stage3_o;
         stage3_o.open(outPath + "/stage3.txt", ios::out);
-        projectionTransformation(stage2_i, stage3_o);
-        stage2_i.close();
+        projectionTransformation(trs, stage3_o);
         stage3_o.close();
 
         
     }
 
-    void viewTransformation(ifstream &s, ofstream &o){
+    void viewTransformation(vector<Matrix> &trs, ofstream &o){
         point l = look - eye;
         normalize(l);
         point r = crossProduct(l, up);
@@ -385,30 +381,24 @@ public:
         R.assignToRow(2, {-l.x, -l.y, -l.z, 0});
         Matrix V = R * T;
 
-        int k = trCount;
-        while(k--){
-            Matrix tr = triangleMatFromFile(s);
-            tr = V * tr;
-            // cout << tr.getShape().second << "\n";
-            
-            Printer::print(tr, {3,3}, o, true);
+        for(int i = 0; i < trs.size(); ++i){
+            trs[i] = V * trs[i];
+            Printer::print(trs[i], {3,3}, o, true);
         }
     }
 
-    void projectionTransformation(ifstream &s, ofstream &o){
-        long double fovX = fovY * ar;
-        long double t = near * tan((fovY / 2.) * (M_PI / 180.));
-        long double r = near * tan((fovX / 2.) * (M_PI / 180.));
+    void projectionTransformation(vector<Matrix> &trs, ofstream &o){
+        double fovX = fovY * ar;
+        double t = near * tan((fovY / 2.) * (M_PI / 180.));
+        double r = near * tan((fovX / 2.) * (M_PI / 180.));
         Matrix P(4);
         P.assignToRow(0, {near/r, 0, 0, 0});
         P.assignToRow(1, {0, near / r, 0, 0});
         P.assignToRow(2, {0, 0, -(far + near) / (far - near) , (-2*far*near)/(far - near)});
         P.assignToRow(3, {0, 0, -1 , 0});
 
-        int k = trCount;
 
-        while(k--){
-            Matrix tr = triangleMatFromFile(s);
+        for(auto tr:trs){
             tr = P * tr;
             scaleCol(tr, 0);
             scaleCol(tr, 1);
@@ -426,7 +416,7 @@ public:
 
     }
 
-    void modellingTransformation(ifstream &s, ofstream &o){
+    vector<Matrix> modellingTransformation(ifstream &s, ofstream &o){
         stack<Matrix> st;
         Matrix curr(4, true);
         st.push(curr);
@@ -442,12 +432,9 @@ public:
                 readTriplet(p3, s); 
                 Matrix tr = triangleMat(p1, p2, p3);
                 tr = curr * tr;
-                // tr = tr * (1. / tr.get(3, 3));
-                // Printer::print(tr, {4, 4}, cout);
-                // Printer::print(curr, {4, 4}, cout);
+                triangles.push_back(tr);
                 Printer::print(tr, {3, 3}, o, true);
                 ++trCount;
-                // cout << tr.get(3, 3) << "\n";
                 
             }
             else if(command == "push"){
@@ -457,30 +444,21 @@ public:
                 point p1;
                 readTriplet(p1, s);
                 Matrix mt = scaleMatrix(p1);
-                // Printer::print(curr, {4,4}, cout);
                 curr = curr * mt;
-                // curr = mt * curr;
-                // Printer::print(curr, {4,4}, cout);
             }
             else if(command == "translate"){
                 point p1;
                 readTriplet(p1, s);
                 Matrix mt = translateMatrix(p1);
-                // Printer::print(curr, {4,4}, cout, false);
                 curr = curr * mt;
-                // Printer::print(curr, {4,4}, cout, false);
             }
             else if(command == "rotate"){
                 point p1;
-                long double angle;
+                double angle;
                 s >> angle;
                 readTriplet(p1, s);
-                // Printer::print(curr, {4,4}, cout);
-                Matrix mt = rotationMatrix(angle * (M_PI / 180.), p1);
+                Matrix mt = rotationMatrix(angle * ((double)acos((double)-1) / 180.), p1);
                 curr = curr * mt;
-                // curr = mt * curr;
-                // Printer::print(mt, {4,4}, cout);
-                // Printer::print(curr, {4,4}, cout);
             }
             else if(command == "pop"){
                 if(!st.empty()){
@@ -492,17 +470,22 @@ public:
                 break;
             }
         }
+        return triangles;
         // cout << "file parsed\n";
     }
 };
 
 
-int main(){
+int main(int argc, char** argv){
     // Matrix m;
     // Printer::print(m, {3, 3}, cout);
     // Matrix m2 = m;
     // m.set(1, 2, 4);
     // m2 = m;
-    Solver solve("./TestCases/1", ".");
+    string dir = ".";
+    // if(argc > 1){
+    //     dir = argv[1];
+    // }
+    Solver solve(dir, ".");
     // cout << m.shape.first << " " << m.shape.second << "\n";
 }
