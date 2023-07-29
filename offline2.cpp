@@ -4,8 +4,11 @@
 #include <string>
 #include <stack>
 #include <fstream>
-#include <math.h>
+#include <cmath>
 #include <iomanip>
+#include "bitmap_image.hpp"
+
+#define EPS 1e-6
 
 using namespace std;
 
@@ -239,6 +242,9 @@ public:
         point t = {x - p.x, y - p.y, z - p.z};
         return t;
     }
+    void print(){
+        cout << "x : "  << x << " y : " << y << " z : " << z << "\n";
+    }
 };
 
 point crossProduct(const point& p1, const point& p2){
@@ -259,11 +265,29 @@ double dotProduct(const point &p1,const point &p2){
     return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
 }
 
+static unsigned long int g_seed = 1; 
+inline int random() 
+{ 
+    g_seed = (214013 * g_seed + 2531011); 
+    return (g_seed >> 16) & 0x7FFF; 
+}
+
+struct Triangle{
+    point p1,p2,p3;
+    rgb_t color;
+
+};
+
+struct Line{
+    point base, direction;
+};
+
 class Solver{
     string inpPath, outPath;
     point eye,look,up;
     double fovY, ar, near, far;
     int trCount = 0;
+    int w, h;
 
     void readTriplet(point& x, ifstream& s){
         s >> x.x >> x.y >> x.z;
@@ -328,7 +352,29 @@ class Solver{
         m.assignToCol(i, v);
     }
 
+    double mxOf3(double x, double y, double z){
+        return max(x, max(y, z));
+    }
+    double mnOf3(double x, double y, double z){
+        return min(x, min(y, z));
+    }
 
+    double tAtIntersection(Line &l1, double yVal){
+        // base.y + t * direction.y = yVal
+        if(abs(l1.direction.y) < EPS){
+            return -2;
+        }
+        return (yVal - l1.base.y) / l1.direction.y;
+    }
+
+    double tAtIntersectionX(Line &l1, double xVal){
+        // base.x + t * direction.x = xVal
+        if(abs(l1.direction.x) < EPS){
+            return 0;
+        }
+        return (xVal - l1.base.x) / l1.direction.x;
+    }
+    
 
 public:
     Solver(string inputPath, string outputPath){
@@ -364,7 +410,137 @@ public:
         projectionTransformation(trs, stage3_o);
         stage3_o.close();
 
+        ifstream config;
+        config.open(inputPath + "/config.txt", ios::in);
+        config >> w >> h ;
+        config.close();
+        clipAndScanBuffer(trs);
+    }
+
+    void clipAndScanBuffer(vector<Matrix> &trMs){
+        // cout << w << " " << h;
+        vector<Triangle> trs;
+        for(auto v : trMs){
+            vector<point> points;
+            for(int i = 0; i < 3; ++i){
+                auto x = v.getCol(i);
+                points.push_back({x[0], x[1], x[2]});
+            }
+            rgb_t color = {random() % 256, random() % 256, random() % 256};
+            trs.push_back({points[0], points[1], points[2], color});
+        }
+
+        // for(auto x : trs){
+        //     x.p1.print();
+        //     x.p2.print();
+        //     x.p3.print();
+        //     x.color.print();
+        // }
         
+        bitmap_image image(w, h);
+        image.set_all_channels(0);
+
+        
+        double** buffer = new double*[h];
+        for(int i = 0; i < h; ++i){
+            buffer[i] = new double[w];
+            for(int j = 0; j < w; ++j)
+                buffer[i][j] = 2;
+        }
+        
+        
+        double dx = 2./ w;
+        double dy = 2. / h;
+        double topY = 1 - dy / 2;
+        double bottomY = -1 + dy / 2; 
+        double leftX = -1 + dx / 2;
+        
+        for(auto tr : trs){
+            double mxY = mxOf3(tr.p1.y, tr.p2.y, tr.p3.y);
+            double mnY = mnOf3(tr.p1.y, tr.p2.y, tr.p3.y);
+            mxY = min(mxY, 1.);
+            mnY = max(mnY, -1.);
+            int topIndex = round(abs(mxY - 1.) / dy);
+            int bottomIndex = round(abs(mnY - 1) / dy);
+            // if(abs(mnY - 1) / dy - bottomIndex >= .5)
+            //     ++bottomIndex;
+            // bottomIndex = min(bottomIndex, h - 1);
+
+            Line l1 = {tr.p1, tr.p2 - tr.p1};
+            Line l2 = {tr.p2, tr.p3 - tr.p2};
+            Line l3 = {tr.p3, tr.p1 - tr.p3};
+            Line p1L, p2L;
+            
+            // cout << "topIndex : " << topIndex << " bottomIndex : " << bottomIndex << "\n";
+            point p1,p2;
+            for(int i = topIndex; i < bottomIndex; ++i){
+                double yVal = topY - i * dy;
+                double t1, t2;
+                t1 = tAtIntersection(l1, yVal);
+                p1 = l1.base + l1.direction * t1 ;
+                p1L = l1;
+                t2 = tAtIntersection(l2, yVal);
+                p2 = l2.base + l2.direction * t2;
+                p2L = l2;
+                if(t1 < 0 || t1 > 1){
+                // cout << "t1 : " << t1 <<  "\n";
+                    t1 = tAtIntersection(l3, yVal);
+                    p1 = l3.base + l3.direction * t1;
+                    p1L = l3;
+                }
+                else if(t2 < 0 || t2 > 1){
+                    t2 = tAtIntersection(l3, yVal);
+                    p2 = l3.base + l3.direction * t2;
+                    p2L = l3;
+                }
+                // Line left, right;
+                // if(p1.x < p2.x){
+                //     left = p1L;
+                //     right = p2L;
+                // }
+                // else{
+                //     left = p2L;
+                //     right = p1L;
+                // }
+
+                double left = min(p1.x, p2.x);
+                double right = max(p1.x, p2.x);
+                left = max(left, -1.);
+                right = min(right, 1.);
+                int leftIndex = round((left + 1.) / dx);
+                int rightIndex = round((right + 1.) / dx);
+                // cout << leftIndex << " " << rightIndex << "\n";
+                Line l3 = {p1, p2 - p1};
+
+                for(int j = leftIndex; j < rightIndex; ++j){
+                    double currX = leftX + j * dx;
+                    double t = tAtIntersectionX(l3, currX);
+                    point pt = l3.base + l3.direction * t;
+                    if(pt.z < buffer[i][j]){
+                        buffer[i][j]  = pt.z;
+                        image.set_pixel(j, i, tr.color);
+                    }
+                    // cout << pt.z << "\n";
+                }
+                // cout << "t1 : " << t1 << " t2: " << t2 << "\n";
+            }
+        }
+
+
+        ofstream zbuffer;
+        zbuffer.open(outPath + "/z_buffer.txt");
+
+        for(int i = 0; i < h; ++i){
+            for(int j = 0; j < w; ++j){
+                if(buffer[i][j] == 2.)
+                    continue;
+                else
+                    zbuffer << buffer[i][j] << "   ";
+            }
+            zbuffer << "\n";
+        }
+
+        image.save_image("out.bmp");
     }
 
     void viewTransformation(vector<Matrix> &trs, ofstream &o){
@@ -389,8 +565,8 @@ public:
 
     void projectionTransformation(vector<Matrix> &trs, ofstream &o){
         double fovX = fovY * ar;
-        double t = near * tan((fovY / 2.) * (M_PI / 180.));
-        double r = near * tan((fovX / 2.) * (M_PI / 180.));
+        double t = near * tan((fovY / 2.) * (acos(-1) / 180.));
+        double r = near * tan((fovX / 2.) * (acos(-1) / 180.));
         Matrix P(4);
         P.assignToRow(0, {near/r, 0, 0, 0});
         P.assignToRow(1, {0, near / r, 0, 0});
@@ -398,12 +574,12 @@ public:
         P.assignToRow(3, {0, 0, -1 , 0});
 
 
-        for(auto tr:trs){
-            tr = P * tr;
-            scaleCol(tr, 0);
-            scaleCol(tr, 1);
-            scaleCol(tr, 2);
-            Printer::print(tr, {3,3}, o, true);
+        for(int i = 0; i < trs.size(); ++i){
+            trs[i] = P * trs[i];
+            scaleCol(trs[i], 0);
+            scaleCol(trs[i], 1);
+            scaleCol(trs[i], 2);
+            Printer::print(trs[i], {3,3}, o, true);
         }
     }
 
@@ -482,7 +658,7 @@ int main(int argc, char** argv){
     // Matrix m2 = m;
     // m.set(1, 2, 4);
     // m2 = m;
-    string dir = ".";
+    string dir = "./TestCases_/1";
     // if(argc > 1){
     //     dir = argv[1];
     // }
