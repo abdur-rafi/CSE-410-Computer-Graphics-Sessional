@@ -1,2 +1,2 @@
-g++ offline2.cpp -g -o offline
+g++ main.cpp -g -o offline
 ./offline.exe $1
