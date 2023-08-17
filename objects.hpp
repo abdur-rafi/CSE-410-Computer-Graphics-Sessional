@@ -8,7 +8,7 @@ class Object{
 
 public:
 
-    virtual void draw() = 0;
+    virtual void draw(point eyePos) = 0;
 
 
 };
@@ -22,7 +22,7 @@ public :
 
     Sphere(point cent, double r, point col, quartet cfs,double shininess);
 
-    void draw();
+    void draw(point eyePos);
 
     static Sphere* parseSphere(std::ifstream &f);
 };
@@ -39,7 +39,7 @@ public:
 
     static Pyramid* parsePyramid(std::ifstream &f);
 
-    void draw();
+    void draw(point eyePos);
 
 };
 
@@ -56,7 +56,7 @@ public:
 
     static Cube* parseCube(std::ifstream &f);
 
-    void draw();
+    void draw(point eyePos);
 
 };
 
@@ -67,7 +67,7 @@ class CheckerBoard : public Object{
 public:
     CheckerBoard(double w_, point cf);
 
-    void draw();
+    void draw(point eyePos);
     
     static CheckerBoard* parseCheckerBoard(std::ifstream &f);
 };

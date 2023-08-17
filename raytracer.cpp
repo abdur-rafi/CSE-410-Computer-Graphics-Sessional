@@ -24,6 +24,17 @@ RayTracer::RayTracer(std::ifstream &f){
 
 }
 
+void RayTracer::draw(point eyePos){
+    for(auto x : objects){
+        x->draw(eyePos);
+    }
+}
+
+
+Config RayTracer::getConfig(){
+    return config;
+}
+
 RayTracer::~RayTracer(){
     for(auto x : objects){
         delete x;

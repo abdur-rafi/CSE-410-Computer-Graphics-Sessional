@@ -7,6 +7,9 @@
 #include "utility.hpp"
 #include <fstream>
 #include "raytracer.hpp"
+
+
+RayTracer *rt;
 /* Initialize OpenGL Graphics */
 void initGL() {
     // Set "clearing" or background color
@@ -15,7 +18,7 @@ void initGL() {
 }
 
 const float rotationRate = .05;
-const float movementRate = .1;
+const float movementRate = 1;
 
 point crossProduct(point& p1, point& p2){
     return {p1.y * p2.z - p2.y * p1.z, -p1.x * p2.z + p2.x * p1.z, p1.x * p2.y - p2.x * p1.y};
@@ -37,7 +40,7 @@ float magnitude(const point &p){
     return sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
 }
 
-point eyePos = {0, 0 , 4};
+point eyePos = {0, 0 , 200};
 // point eyePos = {2.56357 ,1.91455, 2.92836};
 
 point look = {0, 0, -1};
@@ -56,6 +59,27 @@ float distFromCenter = sqrt(magnitude(eyePos));
 
 int rotAngleY = 0;
 
+void drawAxes() {
+    glLineWidth(3);
+    glBegin(GL_LINES);
+        glColor3f(1,0,0);   // Red
+        // X axis
+        glVertex3f(0,0,0);
+        glVertex3f(100,0,0);
+
+        glColor3f(0,1,0);   // Green
+        // Y axis
+        glVertex3f(0,0,0);
+        glVertex3f(0,100,0);
+
+        glColor3f(0,0,1);   // Blue
+        // Z axis
+        glVertex3f(0,0,0);
+        glVertex3f(0,0,100);
+    glEnd();
+}
+
+
 void display() {
     // glClear(GL_COLOR_BUFFER_BIT);            // Clear the color buffer (background)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -73,8 +97,8 @@ void display() {
     glPushMatrix();
         glRotatef(rotAngleY, 0, 1, 0);
         // glRotatef(rotAngleX, 1, 0, 0);
-
-
+        drawAxes();
+        rt->draw(eyePos);
 
     glPopMatrix();
 
@@ -102,7 +126,7 @@ void reshapeListener(GLsizei width, GLsizei height) {  // GLsizei for non-negati
         gluOrtho2D(-1.0, 1.0, -1.0 / aspect, 1.0 / aspect);
     }*/
     // Enable perspective projection with fovy, aspect, zNear and zFar
-    gluPerspective(45.0f, aspect, 0.1f, 100.0f);
+    gluPerspective(rt->getConfig().fovY, rt->getConfig().ratio, rt->getConfig().near, rt->getConfig().far);
 }
 
 
@@ -184,10 +208,10 @@ int main(int argc, char** argv) {
     std::ifstream f;
     f.open("description.txt");
     
-    RayTracer rt(f);
+    rt = new RayTracer(f);
 
     glutInit(&argc, argv);                      // Initialize GLUT
-    glutInitWindowSize(640, 640);               // Set the window's initial width & height
+    glutInitWindowSize(800, 800);               // Set the window's initial width & height
     glutInitWindowPosition(50, 50);             // Position the window's initial top-left corner
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGB);	//Depth, Double buffer, RGB color
     glutCreateWindow("OpenGL 3D Drawing");      // Create a window with the given title

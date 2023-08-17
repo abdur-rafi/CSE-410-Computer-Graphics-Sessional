@@ -11,10 +11,15 @@ class RayTracer{
     
     Config config;
     std::vector<Object*> objects;
+    point* eyePos;
 
 public:
 
+    Config getConfig();
+
     RayTracer(std::ifstream &f);
+
+    void draw(point eyePos);
 
     ~RayTracer();
 };
