@@ -3,6 +3,7 @@
 
 #include "utility.hpp"
 #include <fstream>
+#include <vector>
 
 class Object{
 
@@ -10,7 +11,7 @@ public:
 
     virtual void draw(point eyePos) = 0;
 
-
+    virtual double intersection(const Line &line) = 0;
 };
 
 class Sphere : public Object{
@@ -25,6 +26,7 @@ public :
     void draw(point eyePos);
 
     static Sphere* parseSphere(std::ifstream &f);
+    double intersection(const Line &line);
 };
 
 class Pyramid : public Object{
@@ -33,6 +35,7 @@ class Pyramid : public Object{
     point color;
     quartet coeffs;
     double shininess;
+    std::vector<Surface*> surfaces;
 
 public:
     Pyramid(point lp, double w_, double h_, point col, quartet cf, double sh);
@@ -40,7 +43,7 @@ public:
     static Pyramid* parsePyramid(std::ifstream &f);
 
     void draw(point eyePos);
-
+    double intersection(const Line &line);
 };
 
 
@@ -50,6 +53,7 @@ class Cube : public Object{
     point color;
     quartet coeffs;
     double shininess;
+    std::vector<Surface*> surfaces;
 
 public:
     Cube(point lp, double side, point col, quartet cf, double sh);
@@ -57,6 +61,7 @@ public:
     static Cube* parseCube(std::ifstream &f);
 
     void draw(point eyePos);
+    double intersection(const Line &line);
 
 };
 
@@ -70,6 +75,7 @@ public:
     void draw(point eyePos);
     
     static CheckerBoard* parseCheckerBoard(std::ifstream &f);
+    double intersection(const Line &line);
 };
 
 

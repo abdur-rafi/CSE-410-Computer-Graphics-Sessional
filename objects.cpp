@@ -85,38 +85,55 @@ Pyramid::Pyramid(point lp, double w_, double h_, point col, quartet cf, double s
     color = col;
     coeffs = cf;
     shininess = sh;
-}
 
-void Pyramid::draw(point eyePos){
-    double d2r = (M_PI / 180.);
     double baseCenterToCorner = w / sqrt(2);
     point cornerPoints[4];
     for(int i = 0; i < 4; ++i){
         cornerPoints[i] = lowestPoint;
-        cornerPoints[i].x += baseCenterToCorner * cos((135 - i * 90) * d2r);
-        cornerPoints[i].z += baseCenterToCorner * sin((135 - i * 90) * d2r);
+        cornerPoints[i].x += baseCenterToCorner * cos((135 - i * 90) * D2R);
+        cornerPoints[i].z += baseCenterToCorner * sin((135 - i * 90) * D2R);
     }
     point topPoint = lowestPoint;
     topPoint.y += h;
+    for(int i = 0; i < 4; ++i){
+        surfaces.push_back(new Triangle(cornerPoints[i], cornerPoints[(i+1)%4], topPoint));
+    }
+    surfaces.push_back(new Quadrilateral(cornerPoints[0], cornerPoints[1], cornerPoints[2], cornerPoints[3]));
+}
 
-    // std::cout <<  "height: " << h << "\n";
-    // std ::cout << topPoint.x << " " << topPoint.y << " " << topPoint.z << "\n";
-    glBegin(GL_QUADS);
-        glColor3f(color.x, color.y, color.z);
-        for(int i = 0; i < 4; ++i){
-            glVertex3f(cornerPoints[i].x, cornerPoints[i].y, cornerPoints[i].z);
-        }
-    glEnd();
+void Pyramid::draw(point eyePos){
+    glColor3f(color.x, color.y, color.z);
+    for(auto surface : surfaces){
+        surface->draw();
+    }
+    // double baseCenterToCorner = w / sqrt(2);
+    // point cornerPoints[4];
+    // for(int i = 0; i < 4; ++i){
+    //     cornerPoints[i] = lowestPoint;
+    //     cornerPoints[i].x += baseCenterToCorner * cos((135 - i * 90) * D2R);
+    //     cornerPoints[i].z += baseCenterToCorner * sin((135 - i * 90) * D2R);
+    // }
+    // point topPoint = lowestPoint;
+    // topPoint.y += h;
 
-    glBegin(GL_TRIANGLES);
-        for(int i = 0; i < 3; ++i){
-            glVertex3f(cornerPoints[i].x, cornerPoints[i].y, cornerPoints[i].z);
-            int j = (i + 1) % 4;
-            glVertex3f(cornerPoints[j].x, cornerPoints[j].y, cornerPoints[j].z);
-            glVertex3f(topPoint.x, topPoint.y,topPoint.z);
+    // // std::cout <<  "height: " << h << "\n";
+    // // std ::cout << topPoint.x << " " << topPoint.y << " " << topPoint.z << "\n";
+    // glBegin(GL_QUADS);
+    //     glColor3f(color.x, color.y, color.z);
+    //     for(int i = 0; i < 4; ++i){
+    //         glVertex3f(cornerPoints[i].x, cornerPoints[i].y, cornerPoints[i].z);
+    //     }
+    // glEnd();
 
-        }
-    glEnd();
+    // glBegin(GL_TRIANGLES);
+    //     for(int i = 0; i < 3; ++i){
+    //         glVertex3f(cornerPoints[i].x, cornerPoints[i].y, cornerPoints[i].z);
+    //         int j = (i + 1) % 4;
+    //         glVertex3f(cornerPoints[j].x, cornerPoints[j].y, cornerPoints[j].z);
+    //         glVertex3f(topPoint.x, topPoint.y,topPoint.z);
+
+    //     }
+    // glEnd();
 }
 
 Cube* Cube::parseCube(std::ifstream &f){
@@ -136,46 +153,109 @@ Cube::Cube(point lp, double side, point col, quartet cf, double sh){
     color = col;
     coeffs = cf;
     shininess = sh;
+    point cornerPoints[8];
+    point t = bottomLeft;
+    for(int i = 0; i < 2; ++i){
+
+        cornerPoints[0 + i * 4] = t;
+        cornerPoints[1 + i * 4] = t + point(side, 0, 0);
+        cornerPoints[2 + i * 4] = t + point(side,0, -side);
+        cornerPoints[3 + i * 4] = t + point(0, 0, -side);
+        t = t + point(0, side, 0);
+    }
+    surfaces.push_back(
+        new Quadrilateral(
+            cornerPoints[0], cornerPoints[3 ],
+            cornerPoints[2], cornerPoints[1 ]
+        )
+    );
+
+    surfaces.push_back(
+        new Quadrilateral(
+            cornerPoints[4], cornerPoints[5],
+            cornerPoints[6], cornerPoints[7]
+        )
+    );
+    
+
+
+    surfaces.push_back(
+        new Quadrilateral(
+            cornerPoints[0], cornerPoints[1],
+            cornerPoints[5], cornerPoints[4]
+        )
+    );
+
+
+    surfaces.push_back(
+        new Quadrilateral(
+            cornerPoints[3], cornerPoints[7],
+            cornerPoints[6], cornerPoints[2]
+        )
+    );
+
+    surfaces.push_back(
+        new Quadrilateral(
+            cornerPoints[0], cornerPoints[4],
+            cornerPoints[7], cornerPoints[3]
+        )
+    );
+    
+    surfaces.push_back(
+        new Quadrilateral(
+            cornerPoints[1], cornerPoints[2],
+            cornerPoints[6], cornerPoints[5]
+        )
+    );
+    
+
+
+
+
 }
 
 void Cube::draw(point eyePos){
-    glBegin(GL_QUADS);
-        for(int i = 0; i < 4; ++i){
-            int yOffset = (i > 1) ? side : 0;
-            int zOffset = (i == 1 || i == 2) ? side : 0;
-            glVertex3f(bottomLeft.x, bottomLeft.y + yOffset, bottomLeft.z + zOffset);
-        }
-        for(int i = 0; i < 4; ++i){
-            int yOffset = (i > 1) ? side : 0;
-            int zOffset = (i == 1 || i == 2) ? side : 0;
-            glVertex3f(bottomLeft.x + side, bottomLeft.y + yOffset, bottomLeft.z + zOffset);
-        }
-        for(int i = 0; i < 4; ++i){
-            int xOffset = (i > 1) ? side : 0;
-            int zOffset = (i == 1 || i == 2) ? side : 0;
-            glVertex3f(bottomLeft.x + xOffset, bottomLeft.y, bottomLeft.z + zOffset);
-        }
+    glColor3f(color.x, color.y, color.z);
+    for(auto x : surfaces){
+        x->draw();
+    }
+    // glBegin(GL_QUADS);
+    //     for(int i = 0; i < 4; ++i){
+    //         int yOffset = (i > 1) ? side : 0;
+    //         int zOffset = (i == 1 || i == 2) ? side : 0;
+    //         glVertex3f(bottomLeft.x, bottomLeft.y + yOffset, bottomLeft.z + zOffset);
+    //     }
+    //     for(int i = 0; i < 4; ++i){
+    //         int yOffset = (i > 1) ? side : 0;
+    //         int zOffset = (i == 1 || i == 2) ? side : 0;
+    //         glVertex3f(bottomLeft.x + side, bottomLeft.y + yOffset, bottomLeft.z + zOffset);
+    //     }
+    //     for(int i = 0; i < 4; ++i){
+    //         int xOffset = (i > 1) ? side : 0;
+    //         int zOffset = (i == 1 || i == 2) ? side : 0;
+    //         glVertex3f(bottomLeft.x + xOffset, bottomLeft.y, bottomLeft.z + zOffset);
+    //     }
         
-        for(int i = 0; i < 4; ++i){
-            int xOffset = (i > 1) ? side : 0;
-            int zOffset = (i == 1 || i == 2) ? side : 0;
-            glVertex3f(bottomLeft.x + xOffset, bottomLeft.y + side, bottomLeft.z + zOffset);
-        }
+    //     for(int i = 0; i < 4; ++i){
+    //         int xOffset = (i > 1) ? side : 0;
+    //         int zOffset = (i == 1 || i == 2) ? side : 0;
+    //         glVertex3f(bottomLeft.x + xOffset, bottomLeft.y + side, bottomLeft.z + zOffset);
+    //     }
 
-        for(int i = 0; i < 4; ++i){
-            int xOffset = (i > 1) ? side : 0;
-            int yOffset = (i == 1 || i == 2) ? side : 0;
-            glVertex3f(bottomLeft.x + xOffset, bottomLeft.y + yOffset, bottomLeft.z + side);
-        }
+    //     for(int i = 0; i < 4; ++i){
+    //         int xOffset = (i > 1) ? side : 0;
+    //         int yOffset = (i == 1 || i == 2) ? side : 0;
+    //         glVertex3f(bottomLeft.x + xOffset, bottomLeft.y + yOffset, bottomLeft.z + side);
+    //     }
 
-        for(int i = 0; i < 4; ++i){
-            int xOffset = (i > 1) ? side : 0;
-            int yOffset = (i == 1 || i == 2) ? side : 0;
-            glVertex3f(bottomLeft.x + xOffset, bottomLeft.y + yOffset, bottomLeft.z);
-        }
+    //     for(int i = 0; i < 4; ++i){
+    //         int xOffset = (i > 1) ? side : 0;
+    //         int yOffset = (i == 1 || i == 2) ? side : 0;
+    //         glVertex3f(bottomLeft.x + xOffset, bottomLeft.y + yOffset, bottomLeft.z);
+    //     }
         
         
-    glEnd();
+    // glEnd();
 }
 
 CheckerBoard::CheckerBoard(double a, point cf){
@@ -214,4 +294,38 @@ void CheckerBoard::draw(point eyePos){
         
         glEnd();
     glPopMatrix();
+}
+
+double Sphere::intersection(const Line &line){
+    point R0 = this->center - line.src;
+    double td = R0.dotProduct(line.dir);
+    double r2 = radius * radius;
+    if(td < 0){
+        return -1;
+    }
+    double d2 = R0.dotProduct(R0) - td * td;
+    if(d2 > r2){
+        return -1;
+    }
+    double t = sqrt(r2 - d2);
+    if(R0.dotProduct(R0) < r2){
+        t = td + t;
+    }
+    else{
+        t = td - t;
+    }
+    return t;
+}
+
+double Pyramid::intersection(const Line &line){
+
+
+}
+
+double Cube::intersection(const Line &line){
+    
+}
+
+double CheckerBoard::intersection(const Line &line){
+    
 }
