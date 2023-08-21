@@ -18,7 +18,7 @@ void initGL() {
 }
 
 const float rotationRate = .05;
-const float movementRate = 1;
+const float movementRate = 5;
 
 CameraConfig cConfig = {
     {0, 0, -1},
@@ -140,6 +140,7 @@ void keyboard(unsigned char key, int x, int y) {
         break;
     case '0':
         rt->generatePointBuffer(cConfig);
+        rt->generateImage(cConfig);
     default:
         break;
     }
@@ -184,7 +185,7 @@ int main(int argc, char** argv) {
     rt = new RayTracer(f);
 
     glutInit(&argc, argv);                      // Initialize GLUT
-    glutInitWindowSize(800, 800);               // Set the window's initial width & height
+    glutInitWindowSize(768, 768);               // Set the window's initial width & height
     glutInitWindowPosition(50, 50);             // Position the window's initial top-left corner
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGB);	//Depth, Double buffer, RGB color
     glutCreateWindow("OpenGL 3D Drawing");      // Create a window with the given title

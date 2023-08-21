@@ -47,7 +47,7 @@ public:
     point src;
     point dir;
 
-    Line(point from , point toOrDir, bool isDir);
+    Line(const point& from ,const point& toOrDir, bool isDir);
 };
 
 struct IntersectionReturnVal{

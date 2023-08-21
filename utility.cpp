@@ -1,5 +1,6 @@
 #include "utility.hpp"
 #include <cmath>
+#include <iostream>
 
 point point::operator*(float s) const{
     point t = {x * s, y * s, z * s};
@@ -44,7 +45,7 @@ float magnitude(const point &p){
 }
 
 
-Line::Line(point from , point toOrDir, bool isDir = false){
+Line::Line(const point& from , const point& toOrDir, bool isDir){
     src = from;
     dir = toOrDir;
     if(!isDir){
@@ -72,8 +73,11 @@ double Triangle::intersection(const Line &line){
     Determinant3By3 gammaD(a - b, a - line.src, line.dir);
     Determinant3By3 tD(a - b, a - c, a - line.src);
     Determinant3By3 A(a - b, a - c, line.dir);
+    double aVal = A.getVal();
+    std::cout << "aval " << aVal << "\n";
     double beta = betaD.getVal() / A.getVal();
     double gamma = gammaD.getVal() / A.getVal();
+    // std::cout << beta << " " << gamma << "\n";
     double t = tD.getVal() / A.getVal();
     if(beta >= 0 && gamma >= 0 && beta + gamma <= 1 && t > 0){
         return t;

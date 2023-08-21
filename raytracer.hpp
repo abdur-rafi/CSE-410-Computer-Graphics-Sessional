@@ -26,7 +26,9 @@ public:
 
     ~RayTracer();
 
-    void generatePointBuffer(CameraConfig cConfig);
+    void generatePointBuffer(const CameraConfig &cConfig);
+
+    void generateImage(const CameraConfig &cConfig);
 };
 
 #endif

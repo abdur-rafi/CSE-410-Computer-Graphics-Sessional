@@ -91,7 +91,7 @@ Pyramid::Pyramid(point lp, double w_, double h_, point col, quartet cf, double s
     for(int i = 0; i < 4; ++i){
         cornerPoints[i] = lowestPoint;
         cornerPoints[i].x += baseCenterToCorner * cos((135 - i * 90) * D2R);
-        cornerPoints[i].z += baseCenterToCorner * sin((135 - i * 90) * D2R);
+        cornerPoints[i].z -= baseCenterToCorner * sin((135 - i * 90) * D2R);
     }
     point topPoint = lowestPoint;
     topPoint.y += h;
@@ -106,34 +106,6 @@ void Pyramid::draw(point eyePos){
     for(auto surface : surfaces){
         surface->draw();
     }
-    // double baseCenterToCorner = w / sqrt(2);
-    // point cornerPoints[4];
-    // for(int i = 0; i < 4; ++i){
-    //     cornerPoints[i] = lowestPoint;
-    //     cornerPoints[i].x += baseCenterToCorner * cos((135 - i * 90) * D2R);
-    //     cornerPoints[i].z += baseCenterToCorner * sin((135 - i * 90) * D2R);
-    // }
-    // point topPoint = lowestPoint;
-    // topPoint.y += h;
-
-    // // std::cout <<  "height: " << h << "\n";
-    // // std ::cout << topPoint.x << " " << topPoint.y << " " << topPoint.z << "\n";
-    // glBegin(GL_QUADS);
-    //     glColor3f(color.x, color.y, color.z);
-    //     for(int i = 0; i < 4; ++i){
-    //         glVertex3f(cornerPoints[i].x, cornerPoints[i].y, cornerPoints[i].z);
-    //     }
-    // glEnd();
-
-    // glBegin(GL_TRIANGLES);
-    //     for(int i = 0; i < 3; ++i){
-    //         glVertex3f(cornerPoints[i].x, cornerPoints[i].y, cornerPoints[i].z);
-    //         int j = (i + 1) % 4;
-    //         glVertex3f(cornerPoints[j].x, cornerPoints[j].y, cornerPoints[j].z);
-    //         glVertex3f(topPoint.x, topPoint.y,topPoint.z);
-
-    //     }
-    // glEnd();
 }
 
 Cube* Cube::parseCube(std::ifstream &f){
@@ -219,43 +191,6 @@ void Cube::draw(point eyePos){
     for(auto x : surfaces){
         x->draw();
     }
-    // glBegin(GL_QUADS);
-    //     for(int i = 0; i < 4; ++i){
-    //         int yOffset = (i > 1) ? side : 0;
-    //         int zOffset = (i == 1 || i == 2) ? side : 0;
-    //         glVertex3f(bottomLeft.x, bottomLeft.y + yOffset, bottomLeft.z + zOffset);
-    //     }
-    //     for(int i = 0; i < 4; ++i){
-    //         int yOffset = (i > 1) ? side : 0;
-    //         int zOffset = (i == 1 || i == 2) ? side : 0;
-    //         glVertex3f(bottomLeft.x + side, bottomLeft.y + yOffset, bottomLeft.z + zOffset);
-    //     }
-    //     for(int i = 0; i < 4; ++i){
-    //         int xOffset = (i > 1) ? side : 0;
-    //         int zOffset = (i == 1 || i == 2) ? side : 0;
-    //         glVertex3f(bottomLeft.x + xOffset, bottomLeft.y, bottomLeft.z + zOffset);
-    //     }
-        
-    //     for(int i = 0; i < 4; ++i){
-    //         int xOffset = (i > 1) ? side : 0;
-    //         int zOffset = (i == 1 || i == 2) ? side : 0;
-    //         glVertex3f(bottomLeft.x + xOffset, bottomLeft.y + side, bottomLeft.z + zOffset);
-    //     }
-
-    //     for(int i = 0; i < 4; ++i){
-    //         int xOffset = (i > 1) ? side : 0;
-    //         int yOffset = (i == 1 || i == 2) ? side : 0;
-    //         glVertex3f(bottomLeft.x + xOffset, bottomLeft.y + yOffset, bottomLeft.z + side);
-    //     }
-
-    //     for(int i = 0; i < 4; ++i){
-    //         int xOffset = (i > 1) ? side : 0;
-    //         int yOffset = (i == 1 || i == 2) ? side : 0;
-    //         glVertex3f(bottomLeft.x + xOffset, bottomLeft.y + yOffset, bottomLeft.z);
-    //     }
-        
-        
-    // glEnd();
 }
 
 CheckerBoard::CheckerBoard(double a, point cf){
@@ -318,14 +253,46 @@ double Sphere::intersection(const Line &line){
 }
 
 double Pyramid::intersection(const Line &line){
-
+    double tValidMin = -1;
+    for(auto surface : surfaces){
+        double tCurr = surface->intersection(line);
+        if(tCurr >= 0){
+            if(tValidMin < 0){
+                tValidMin = tCurr;
+            }
+            else{
+                tValidMin = std::min(tValidMin, tCurr);
+            }
+        }
+    }
+    return tValidMin;
 
 }
 
 double Cube::intersection(const Line &line){
-    
+    double tValidMin = -1;
+    for(auto surface : surfaces){
+        double tCurr = surface->intersection(line);
+        if(tCurr >= 0){
+            if(tValidMin < 0){
+                tValidMin = tCurr;
+            }
+            else{
+                tValidMin = std::min(tValidMin, tCurr);
+            }
+        }
+    }
+    return tValidMin;
 }
 
 double CheckerBoard::intersection(const Line &line){
-    
+    return -1;
+    if(line.dir.y == 0){
+        return -1;
+    }
+    double t = -line.src.y / line.dir.y;
+    if(t < 0){
+        return -1;
+    }
+    return t;
 }
