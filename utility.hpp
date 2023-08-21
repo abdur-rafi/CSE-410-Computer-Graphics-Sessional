@@ -21,4 +21,14 @@ struct quartet{
     static quartet parseQuartet(std::ifstream &);
 };
 
+
+
+point crossProduct(point& p1, point& p2);
+
+void rotateVector(point& axis, point& vector, float angle);
+
+void normalize(point& p);
+
+float magnitude(const point &p);
+
 #endif

@@ -20,41 +20,12 @@ void initGL() {
 const float rotationRate = .05;
 const float movementRate = 1;
 
-point crossProduct(point& p1, point& p2){
-    return {p1.y * p2.z - p2.y * p1.z, -p1.x * p2.z + p2.x * p1.z, p1.x * p2.y - p2.x * p1.y};
-}
-
-void rotateVector(point& axis, point& vector, float angle){
-    point u = crossProduct(axis, vector);
-    vector = u * sin(angle) + vector * cos(angle);
-}
-
-void normalize(point& p){
-    double mag = sqrt(p.x  * p.x + p.y * p.y + p.z * p.z);
-    if(mag > 1e-7){
-        p = p * (1. / mag);
-    }
-}
-
-float magnitude(const point &p){
-    return sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
-}
-
-point eyePos = {0, 0 , 200};
-// point eyePos = {2.56357 ,1.91455, 2.92836};
-
-point look = {0, 0, -1};
-// point look = {-0.615372 ,-0.337015 ,-0.712558};
-point right = {1, 0, 0};
-// point right = {0.759506 ,-0.0116736, -0.650395};
-point up = {0, 1, 0};
-// point up = {-0.210875 ,0.941427 ,-0.263148};
-
-
-
-float distFromCenter = sqrt(magnitude(eyePos));
-
-// Global variables
+CameraConfig cConfig = {
+    {0, 0, -1},
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 0, 200}
+};
 
 
 int rotAngleY = 0;
@@ -86,19 +57,19 @@ void display() {
     glMatrixMode(GL_MODELVIEW);             // To operate on Model-View matrix
     glLoadIdentity();                       // Reset the model-view matrix
 
-    // default arguments of gluLookAt
+    // default arguments of glu`At
     // gluLookAt(0,0,0, 0,0,-100, 0,1,0);
 
     // control viewing (or camera)
-    gluLookAt(eyePos.x, eyePos.y, eyePos.z,
-              eyePos.x + distFromCenter * look.x, eyePos.y + distFromCenter * look.y, eyePos.z + distFromCenter * look.z,
-              up.x, up.y, up.z);
+    gluLookAt(cConfig.eyePos.x, cConfig.eyePos.y, cConfig.eyePos.z,
+              cConfig.eyePos.x + cConfig.l.x, cConfig.eyePos.y + cConfig.l.y, cConfig.eyePos.z + cConfig.l.z,
+              cConfig.u.x, cConfig.u.y, cConfig.u.z);
     
     glPushMatrix();
         glRotatef(rotAngleY, 0, 1, 0);
         // glRotatef(rotAngleX, 1, 0, 0);
         drawAxes();
-        rt->draw(eyePos);
+        rt->draw(cConfig.eyePos);
 
     glPopMatrix();
 
@@ -144,29 +115,31 @@ void keyboard(unsigned char key, int x, int y) {
         rotAngleY -= 5;
         break;
     case '2':
-        rotateVector(up, look, -rotationRate);
-        rotateVector(up, right, -rotationRate);
+        rotateVector(cConfig.u, cConfig.l, -rotationRate);
+        rotateVector(cConfig.u, cConfig.r, -rotationRate);
         break;
     case '1':
-        rotateVector(up, look, rotationRate);
-        rotateVector(up, right, rotationRate);
+        rotateVector(cConfig.u, cConfig.l, rotationRate);
+        rotateVector(cConfig.u, cConfig.r, rotationRate);
         break;
     case '3':
-        rotateVector(right, look, rotationRate);
-        rotateVector(right, up, rotationRate);
+        rotateVector(cConfig.r, cConfig.l, rotationRate);
+        rotateVector(cConfig.r, cConfig.u, rotationRate);
         break;
     case '4':
-        rotateVector(right, look, -rotationRate);
-        rotateVector(right, up, -rotationRate);
+        rotateVector(cConfig.r, cConfig.l, -rotationRate);
+        rotateVector(cConfig.r, cConfig.u, -rotationRate);
         break;
     case '5':
-        rotateVector(look, right, rotationRate);
-        rotateVector(look, up, rotationRate);
+        rotateVector(cConfig.l, cConfig.r, rotationRate);
+        rotateVector(cConfig.l, cConfig.u, rotationRate);
         break;
     case '6':
-        rotateVector(look, right, -rotationRate);
-        rotateVector(look, up, -rotationRate);
+        rotateVector(cConfig.l, cConfig.r, -rotationRate);
+        rotateVector(cConfig.l, cConfig.u, -rotationRate);
         break;
+    case '0':
+        rt->generatePointBuffer(cConfig);
     default:
         break;
     }
@@ -180,22 +153,22 @@ void special(int key, int x, int y) {
     switch(key) {
     
     case GLUT_KEY_LEFT:
-        eyePos = eyePos - right * movementRate;
+        cConfig.eyePos = cConfig.eyePos - cConfig.r * movementRate;
         break;
     case GLUT_KEY_RIGHT:
-        eyePos = eyePos + right * movementRate;
+        cConfig.eyePos = cConfig.eyePos + cConfig.r * movementRate;
         break;
     case GLUT_KEY_UP:
-        eyePos = eyePos + look * movementRate;
+        cConfig.eyePos = cConfig.eyePos + cConfig.l * movementRate;
         break;
     case GLUT_KEY_DOWN:
-        eyePos = eyePos - look * movementRate;
+        cConfig.eyePos = cConfig.eyePos - cConfig.l * movementRate;
         break;
     case GLUT_KEY_PAGE_UP:
-        eyePos = eyePos + up * movementRate;
+        cConfig.eyePos = cConfig.eyePos + cConfig.u * movementRate;
         break;
     case GLUT_KEY_PAGE_DOWN:
-        eyePos = eyePos - up * movementRate;
+        cConfig.eyePos = cConfig.eyePos - cConfig.u * movementRate;
         break;
     }
     glutPostRedisplay();

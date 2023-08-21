@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <iostream>
+#include "utility.hpp"
 
 struct Config{
     double near, far;
@@ -14,5 +15,11 @@ struct Config{
     
 };
 
+
+struct CameraConfig{
+    point l, r, u;
+    point eyePos;
+
+};
 
 #endif 
