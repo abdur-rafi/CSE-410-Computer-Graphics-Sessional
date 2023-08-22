@@ -286,7 +286,7 @@ double Cube::intersection(const Line &line){
 }
 
 double CheckerBoard::intersection(const Line &line){
-    return -1;
+    // return -1;
     if(line.dir.y == 0){
         return -1;
     }

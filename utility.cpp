@@ -74,7 +74,7 @@ double Triangle::intersection(const Line &line){
     Determinant3By3 tD(a - b, a - c, a - line.src);
     Determinant3By3 A(a - b, a - c, line.dir);
     double aVal = A.getVal();
-    std::cout << "aval " << aVal << "\n";
+    // std::cout << "aval " << aVal << "\n";
     double beta = betaD.getVal() / A.getVal();
     double gamma = gammaD.getVal() / A.getVal();
     // std::cout << beta << " " << gamma << "\n";
@@ -116,8 +116,8 @@ void Determinant3By3::assignCol(const point& p, int col){
 
 Determinant3By3::Determinant3By3(const point& p1, const point& p2, const point& p3){
     assignCol(p1, 0);
-    assignCol(p1, 1);    
-    assignCol(p1, 2);    
+    assignCol(p2, 1);    
+    assignCol(p3, 2);    
 }
 
 double Determinant3By3::getVal(){
