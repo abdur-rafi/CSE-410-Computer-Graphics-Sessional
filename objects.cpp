@@ -328,12 +328,20 @@ point Pyramid::getColor(const point &p){
 
 
 point CheckerBoard::getColor(const point &p){
-    int i = (p.x) / this->w;
-    int j = p.z / this->w;
-    // if(i + j % 2){
-    //     return 
-    // }
-    return {1, 1, 1};
+    int i = std::abs(p.x) / this->w;
+    int j = std::abs(p.z) / this->w;
+    if(p.x > 0 && p.z > 0 || (p.x < 0 && p.z < 0)){
+        if((i + j) % 2 == 0){
+            return {0, 0, 0};
+        }
+        return {1, 1, 1};
+    }
+    else{
+        if((i + j) % 2 == 0){
+            return {1, 1, 1};
+        }
+        return {0, 0, 0};
+    }
 }
 
 // point Sphere::getColor(const Line& line, RayTracer* rt){
