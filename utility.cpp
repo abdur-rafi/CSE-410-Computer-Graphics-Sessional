@@ -21,8 +21,11 @@ point point::parsePoint(std::ifstream &f){
     f >> t.x >> t.y >> t.z;
     return t;
 }
+point point::operator*(const point& p) const {
+    return point(x * p.x , y * p.y, z * p.z);
+}
 
-point crossProduct(point& p1, point& p2){
+point crossProduct(const point& p1,const point& p2){
     return {p1.y * p2.z - p2.y * p1.z, -p1.x * p2.z + p2.x * p1.z, p1.x * p2.y - p2.x * p1.y};
 }
 
@@ -54,19 +57,22 @@ Line::Line(const point& from , const point& toOrDir, bool isDir){
     dir.normalize();
 }
 
-double point::dotProduct(const point& p){
+double point::dotProduct(const point& p) const {
     return x * p.x + y * p.y + z * p.z;
 }
 
-double point::dotProduct(const point& p1, const point& p2){
-    return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
-}
+// double point::dotProduct(const point& p1, const point& p2){
+//     return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
+// }
 
 
 Triangle::Triangle(point p1, point p2, point p3){
     this->a = p1;
     this->b = p2;
     this->c = p3;
+    normal = new point(crossProduct(b - a, c - a));
+    normal->normalize();
+
 }
 double Triangle::intersection(const Line &line){
     Determinant3By3 betaD(a - line.src, a - c, line.dir);
@@ -93,6 +99,7 @@ Quadrilateral::Quadrilateral(point p1, point p2, point p3, point p4){
     this->d = p4;
     tr1 = new Triangle(a, b, c);
     tr2 = new Triangle(c, d, a);
+    normal = new point(*tr1->normal);
 }
 
 double Quadrilateral::intersection(const Line &line){
@@ -151,3 +158,5 @@ point::point(double a, double b, double c){
     y = b;
     z = c;
 }
+
+

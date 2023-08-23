@@ -1,6 +1,8 @@
 #include "objects.hpp"
 #include <cmath>
 #include <iostream>
+#include "lightSource.hpp"
+#include "raytracer.hpp"
 
 Sphere::Sphere(point cent, double r, point col, quartet cfs, double sh){
 
@@ -193,16 +195,16 @@ void Cube::draw(point eyePos){
     }
 }
 
-CheckerBoard::CheckerBoard(double a, point cf){
+CheckerBoard::CheckerBoard(double a, quartet cf){
     w = a;
-    coeff = cf;
+    coeffs = cf;
 }
 
 CheckerBoard* CheckerBoard::parseCheckerBoard(std::ifstream &f){
     double a;
     f >> a;
     point coeff = point::parsePoint(f);
-    return new CheckerBoard(a, coeff);
+    return new CheckerBoard(a, {coeff.x, coeff.y, 0, coeff.x});
 }
 
 void CheckerBoard::draw(point eyePos){
@@ -231,16 +233,16 @@ void CheckerBoard::draw(point eyePos){
     glPopMatrix();
 }
 
-double Sphere::intersection(const Line &line){
+IntersectionReturnVal Sphere::intersection(const Line &line){
     point R0 = this->center - line.src;
     double td = R0.dotProduct(line.dir);
     double r2 = radius * radius;
     if(td < 0){
-        return -1;
+        return {-1};
     }
     double d2 = R0.dotProduct(R0) - td * td;
     if(d2 > r2){
-        return -1;
+        return {-1};
     }
     double t = sqrt(r2 - d2);
     if(R0.dotProduct(R0) < r2){
@@ -249,50 +251,114 @@ double Sphere::intersection(const Line &line){
     else{
         t = td - t;
     }
-    return t;
+    point normal = line.src + line.dir * t - this->center ;
+    normal.normalize();
+    return {t, normal, this};
 }
 
-double Pyramid::intersection(const Line &line){
+IntersectionReturnVal Pyramid::intersection(const Line &line){
     double tValidMin = -1;
+    point normal;
     for(auto surface : surfaces){
         double tCurr = surface->intersection(line);
         if(tCurr >= 0){
             if(tValidMin < 0){
                 tValidMin = tCurr;
+                normal = *surface->normal;
             }
             else{
                 tValidMin = std::min(tValidMin, tCurr);
+                normal = *surface->normal;
             }
         }
     }
-    return tValidMin;
+    return {tValidMin, normal, this};
 
 }
 
-double Cube::intersection(const Line &line){
+IntersectionReturnVal Cube::intersection(const Line &line){
     double tValidMin = -1;
+    point normal;
     for(auto surface : surfaces){
         double tCurr = surface->intersection(line);
         if(tCurr >= 0){
             if(tValidMin < 0){
                 tValidMin = tCurr;
+                normal = *surface->normal;
             }
             else{
                 tValidMin = std::min(tValidMin, tCurr);
+                normal = *surface->normal;
             }
         }
     }
-    return tValidMin;
+    return {tValidMin, normal, this};
 }
 
-double CheckerBoard::intersection(const Line &line){
+IntersectionReturnVal CheckerBoard::intersection(const Line &line){
     // return -1;
     if(line.dir.y == 0){
-        return -1;
+        
+        return {-1};
     }
     double t = -line.src.y / line.dir.y;
     if(t < 0){
-        return -1;
+        return {-1};
     }
-    return t;
+    point normal(0, 1, 0);
+    if(line.src.y < 0){
+        normal.y = -1;
+    }
+    return {t, point(0,1,0), this};
 }
+
+point Sphere::getColor(const point &p){
+    return this->color;
+}
+
+
+point Cube::getColor(const point &p){
+    return this->color;
+}
+
+
+point Pyramid::getColor(const point &p){
+    return this->color;
+}
+
+
+point CheckerBoard::getColor(const point &p){
+    int i = (p.x) / this->w;
+    int j = p.z / this->w;
+    // if(i + j % 2){
+    //     return 
+    // }
+    return {1, 1, 1};
+}
+
+// point Sphere::getColor(const Line& line, RayTracer* rt){
+//     double t = this->intersection(line);
+//     if(t < 0){
+//         std::cout << "Issue\n";
+//         exit(-1);
+//     }
+//     point intPoint = line.src + line.dir * t;
+//     point normal = intPoint - this->center;
+//     normal.normalize();
+//     point toCamera = line.dir * (-1);
+//     toCamera.normalize();
+//     double lambert = 0;
+//     double phong = 0;
+//     for(auto x : rt->lights){
+//         if(!x->inShadow(intPoint, rt)){
+//             point toSrc = x->position - intPoint;
+//             toSrc.normalize();
+//             lambert += normal.dotProduct(toSrc);
+//             point reflected = line.dir - normal * ( line.dir.dotProduct(normal));
+//             reflected.normalize();
+//             phong += pow(reflected.dotProduct(toSrc), this->shininess);
+//         }
+//     }
+//     point color = this->color * (this->coeffs.x + this->coeffs.y * lambert + this->coeffs.z * phong);
+//     return color;
+// }

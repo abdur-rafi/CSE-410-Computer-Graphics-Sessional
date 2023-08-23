@@ -25,11 +25,13 @@ RayTracer::RayTracer(std::ifstream &f){
     }
     f >> n;
     for(int i = 0; i < n; ++i){
-        lights.push_back(NormalLight::parse(f));
+        LightSource* lt = NormalLight::parse(f);
+        lights.push_back(lt);
     }
     f >> n;
     for(int i = 0; i < n; ++i){
-        lights.push_back(SpotLight::parse(f));
+        LightSource* lt = SpotLight::parse(f);
+        lights.push_back(lt);
     }
     pointBuffer = 0;
 
@@ -102,6 +104,23 @@ void RayTracer::generatePointBuffer(const CameraConfig &cConfig){
 
 }
 
+
+
+IntersectionReturnVal RayTracer::intersection(const Line& line){
+    IntersectionReturnVal minT{-1};
+    point color;
+    for(auto x : objects){
+        auto t = x->intersection(line);
+        if(t.t >= 0){
+            if(minT.t < 0 || t.t < minT.t){
+                minT = t;
+            }
+        }
+    }
+
+    return minT;
+}
+
 void RayTracer::generateImage(const CameraConfig &cConfig){
     bitmap_image image(config.w, config.w);
     image.set_all_channels(0);
@@ -110,20 +129,47 @@ void RayTracer::generateImage(const CameraConfig &cConfig){
 
             point curr = *pointBuffer[i][j];
             Line line(curr, curr - cConfig.eyePos, true);
-            double tMinValid = -1;
-            for(auto x : objects){
-                double t = x->intersection(line);
-                if(t >= 0){
-                    if(tMinValid < 0 || t < tMinValid){
-                        tMinValid = t;
-                    }
-                }
-            }
-            if(tMinValid >= 0){
-                image.set_pixel(j, i, 255, 255, 255);
-            }
+            IntersectionReturnVal val = this->intersection(line);
+            if(val.t < 0 ) continue;
+
+            point color = this->calcColor(val, line) * 255;
+            image.set_pixel(j, i, color.x, color.y, color.z);
+            // double tMinValid = this->intersection(line);
+            // if(tMinValid >= 0){
+            //     point color =
+            //     image.set_pixel(j, i, 255, 255, 255);
+            // }
         }
     }
     image.save_image("test.bmp");
 
+}
+
+point RayTracer::calcColor(const IntersectionReturnVal& val, const Line& line){
+
+    point intPoint = line.src + line.dir * val.t;
+    point toCamera = line.dir * (-1);
+    toCamera.normalize();
+    double lambert = 0;
+    double phong = 0;
+    for(auto x : this->lights){
+        if(!x->inShadow(intPoint, this)){
+            point toSrc = x->position - intPoint;
+            toSrc.normalize();
+            lambert += std::max(0.,val.normal.dotProduct(toSrc));
+            if(val.obj->coeffs.w > 0){
+                point reflected = line.dir - val.normal * ( line.dir.dotProduct(val.normal));
+                reflected.normalize();
+                double prod = reflected.dotProduct(toSrc);
+                if(prod > 0){
+                    phong += pow( prod, val.obj->shininess);
+                }
+            }
+        }
+    }
+    point objColor = val.obj->getColor(intPoint);
+    quartet coeffs = val.obj->coeffs;
+    point color = objColor * (coeffs.x + coeffs.y * lambert + coeffs.z * phong);
+
+    return color;   
 }

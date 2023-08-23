@@ -1,18 +1,22 @@
 #ifndef H_LIGHT_SOURCE
 #define H_LIGHT_SOURCE
 
+// #include "raytracer.hpp"
 #include "utility.hpp"
-#include "objects.hpp"
+
+class RayTracer;
 
 class LightSource{
 
-    point position;
-    double fallOfParam;
 
 
 public:
 
+    point position;
+    double fallOfParam;
+
     LightSource(point p, double f);
+    virtual bool inShadow(const point& pt, RayTracer* rt) = 0;
 
     // void draw() = 0;
 };
@@ -25,13 +29,14 @@ public:
     NormalLight(point pos, double fparam);
 
     static NormalLight* parse(std::ifstream &f);
-
+    bool inShadow(const point& pt, RayTracer* rt);
 };
 
 
 class SpotLight : public LightSource{
 
-    point looking;
+    point lookingTo;
+    point lookingDir;
     double cutOffAngle;
 
 public:
@@ -39,6 +44,7 @@ public:
     SpotLight(point pos, double fparam, point looking, double cutOffAngle);
 
     static SpotLight* parse(std::ifstream &f);
+    bool inShadow(const point& pt, RayTracer* rt);
 };
 
 #endif

@@ -11,12 +11,12 @@
 class RayTracer{
     
     Config config;
-    std::vector<Object*> objects;
     point* eyePos;
     point ***pointBuffer;
-    std::vector<LightSource*> lights;
 
 public:
+    std::vector<Object*> objects;
+    std::vector<LightSource*> lights;
 
     Config getConfig();
 
@@ -28,7 +28,13 @@ public:
 
     void generatePointBuffer(const CameraConfig &cConfig);
 
+    IntersectionReturnVal intersection(const Line& line);
+
+    point colorAtIntersection(const Line& line);
+
     void generateImage(const CameraConfig &cConfig);
+
+    point calcColor(const IntersectionReturnVal& val, const Line&);
 };
 
 #endif

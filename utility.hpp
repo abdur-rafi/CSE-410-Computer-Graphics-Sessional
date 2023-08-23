@@ -5,6 +5,9 @@
 #include <fstream>
 
 #define D2R (M_PI / 180.0)
+#define EPS 1e-4;
+
+class Object;
 
 struct point {
     GLfloat x, y, z;
@@ -16,13 +19,14 @@ struct point {
     point operator+(point p) const;
 
     point operator-(point p) const;
+    point operator* (const point& p) const;
 
     static point parsePoint(std::ifstream&);
 
     void normalize();
 
-    double dotProduct(const point& p);
-    double dotProduct(const point& p1, const point& p2);
+    double dotProduct(const point& p) const;
+    // double dotProduct(const point& p1, const point& p2);
 
 };
 
@@ -34,7 +38,7 @@ struct quartet{
 
 
 
-point crossProduct(point& p1, point& p2);
+point crossProduct(const point& p1, const point& p2);
 
 void rotateVector(point& axis, point& vector, float angle);
 
@@ -51,12 +55,14 @@ public:
 };
 
 struct IntersectionReturnVal{
-    point pointOfIntersection;
-    point colors;
+    double t;
+    point normal;
+    Object* obj;
 };
 
 class Surface{
 public:
+    point* normal;
     virtual double intersection(const Line &line) = 0;
     virtual void draw() = 0;
 };

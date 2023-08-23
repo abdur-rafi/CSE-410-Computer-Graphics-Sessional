@@ -4,21 +4,22 @@
 #include "utility.hpp"
 #include <fstream>
 #include <vector>
-
+class RayTracer;
 class Object{
-
 public:
+    quartet coeffs;
+    double shininess;
 
     virtual void draw(point eyePos) = 0;
+    
+    virtual IntersectionReturnVal intersection(const Line &line) = 0;
+    virtual point getColor(const point& ) = 0;
 
-    virtual double intersection(const Line &line) = 0;
 };
 
 class Sphere : public Object{
     point center, color;
     double radius;
-    quartet coeffs;
-    double shininess;
 public : 
 
     Sphere(point cent, double r, point col, quartet cfs,double shininess);
@@ -26,15 +27,15 @@ public :
     void draw(point eyePos);
 
     static Sphere* parseSphere(std::ifstream &f);
-    double intersection(const Line &line);
+    IntersectionReturnVal intersection(const Line &line);
+    point getColor(const point& );
+
 };
 
 class Pyramid : public Object{
     point lowestPoint;
     double w, h;
     point color;
-    quartet coeffs;
-    double shininess;
     std::vector<Surface*> surfaces;
 
 public:
@@ -43,7 +44,10 @@ public:
     static Pyramid* parsePyramid(std::ifstream &f);
 
     void draw(point eyePos);
-    double intersection(const Line &line);
+    IntersectionReturnVal intersection(const Line &line);
+    point getColor(const point& );
+    
+    
 };
 
 
@@ -51,8 +55,6 @@ class Cube : public Object{
     point bottomLeft;
     double side;
     point color;
-    quartet coeffs;
-    double shininess;
     std::vector<Surface*> surfaces;
 
 public:
@@ -61,21 +63,25 @@ public:
     static Cube* parseCube(std::ifstream &f);
 
     void draw(point eyePos);
-    double intersection(const Line &line);
+    IntersectionReturnVal intersection(const Line &line);
+    
+    point getColor(const point& );
 
 };
 
 class CheckerBoard : public Object{
     double w;
-    point coeff;
 
 public:
-    CheckerBoard(double w_, point cf);
+    CheckerBoard(double w_, quartet cf);
 
     void draw(point eyePos);
     
     static CheckerBoard* parseCheckerBoard(std::ifstream &f);
-    double intersection(const Line &line);
+    IntersectionReturnVal intersection(const Line &line);
+
+    point getColor(const point& );
+
 };
 
 
