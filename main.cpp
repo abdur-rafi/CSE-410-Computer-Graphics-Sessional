@@ -21,10 +21,10 @@ const float rotationRate = .05;
 const float movementRate = 5;
 
 CameraConfig cConfig = {
-    {0, 0, -1},
-    {1, 0, 0},
     {0, 1, 0},
-    {0, 0, 200}
+    {1, 0, 0},
+    {0, 0, 1},
+    {0, -50, 0}
 };
 
 

@@ -93,10 +93,10 @@ Pyramid::Pyramid(point lp, double w_, double h_, point col, quartet cf, double s
     for(int i = 0; i < 4; ++i){
         cornerPoints[i] = lowestPoint;
         cornerPoints[i].x += baseCenterToCorner * cos((135 - i * 90) * D2R);
-        cornerPoints[i].z -= baseCenterToCorner * sin((135 - i * 90) * D2R);
+        cornerPoints[i].y -= baseCenterToCorner * sin((135 - i * 90) * D2R);
     }
     point topPoint = lowestPoint;
-    topPoint.y += h;
+    topPoint.z += h;
     for(int i = 0; i < 4; ++i){
         surfaces.push_back(new Triangle(cornerPoints[(i+1)%4],cornerPoints[i],  topPoint));
     }
@@ -133,9 +133,9 @@ Cube::Cube(point lp, double side, point col, quartet cf, double sh){
 
         cornerPoints[0 + i * 4] = t;
         cornerPoints[1 + i * 4] = t + point(side, 0, 0);
-        cornerPoints[2 + i * 4] = t + point(side,0, -side);
-        cornerPoints[3 + i * 4] = t + point(0, 0, -side);
-        t = t + point(0, side, 0);
+        cornerPoints[2 + i * 4] = t + point(side,side,0);
+        cornerPoints[3 + i * 4] = t + point(0,side,0);
+        t = t + point(0, 0, side);
     }
     surfaces.push_back(
         new Quadrilateral(
@@ -204,14 +204,14 @@ CheckerBoard* CheckerBoard::parseCheckerBoard(std::ifstream &f){
     double a;
     f >> a;
     point coeff = point::parsePoint(f);
-    return new CheckerBoard(a, {coeff.x, coeff.y, 0, coeff.x});
+    return new CheckerBoard(a, {coeff.x, coeff.y, 0, coeff.z});
 }
 
 void CheckerBoard::draw(point eyePos){
     int c = 0;
     glPushMatrix();
         // glTranslatef(eyePos.x, 0, eyePos.z);
-        glTranslatef(0, 0, -500);
+        glTranslatef(0, -500, 0);
         glBegin(GL_QUADS);
         for(int i = -10; i < 20; ++i){
             for(int j = 1; j < 50; ++j){
@@ -222,10 +222,15 @@ void CheckerBoard::draw(point eyePos){
                     glColor3f(1, 1, 1);
                 }
                 c = 1 - c;
-                glVertex3f((i-1) * w, 0 , (j-1) * w);
-                glVertex3f((i) * w, 0 , (j-1) * w);
-                glVertex3f((i) * w, 0 , (j) * w);
-                glVertex3f((i-1) * w, 0 , (j) * w);
+                // glVertex3f((i-1) * w, 0 , (j-1) * w);
+                // glVertex3f((i) * w, 0 , (j-1) * w);
+                // glVertex3f((i) * w, 0 , (j) * w);
+                // glVertex3f((i-1) * w, 0 , (j) * w);
+                glVertex3f((i-1) * w, (j-1) * w, 0);
+                glVertex3f((i) * w, (j-1) * w, 0);
+                glVertex3f((i) * w, (j) * w, 0);
+                glVertex3f((i-1) * w, (j) * w, 0);
+
             }
         }
         
@@ -301,17 +306,17 @@ IntersectionReturnVal Cube::intersection(const Line &line){
 
 IntersectionReturnVal CheckerBoard::intersection(const Line &line){
     // return -1;
-    if(line.dir.y == 0){
+    if(line.dir.z == 0){
         
         return {-1};
     }
-    double t = -line.src.y / line.dir.y;
+    double t = -line.src.z / line.dir.z;
     if(t < 0){
     return {-1};
     }
-    point normal(0, 1, 0);
-    if(line.src.y < 0){
-        normal.y = -1;
+    point normal(0, 0, 1);
+    if(line.src.z < 0){
+        normal.z = -1;
     }
     return {t, normal, this};
 }
@@ -333,8 +338,8 @@ point Pyramid::getColor(const point &p){
 
 point CheckerBoard::getColor(const point &p){
     int i = std::abs(p.x) / this->w;
-    int j = std::abs(p.z) / this->w;
-    if(p.x > 0 && p.z > 0 || (p.x < 0 && p.z < 0)){
+    int j = std::abs(p.y) / this->w;
+    if(p.x > 0 && p.y > 0 || (p.x < 0 && p.y < 0)){
         if((i + j) % 2 == 0){
             return {1, 1, 1};
         }
