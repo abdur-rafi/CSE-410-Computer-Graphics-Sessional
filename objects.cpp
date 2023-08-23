@@ -309,7 +309,7 @@ IntersectionReturnVal CheckerBoard::intersection(const Line &line){
     if(line.src.y < 0){
         normal.y = -1;
     }
-    return {t, point(0,1,0), this};
+    return {t, normal, this};
 }
 
 point Sphere::getColor(const point &p){
