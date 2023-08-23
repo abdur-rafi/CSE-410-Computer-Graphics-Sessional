@@ -129,10 +129,13 @@ void RayTracer::generateImage(const CameraConfig &cConfig){
 
             point curr = *pointBuffer[i][j];
             Line line(curr, curr - cConfig.eyePos, true);
-            IntersectionReturnVal val = this->intersection(line);
-            if(val.t < 0 ) continue;
+            // IntersectionReturnVal val = this->intersection(line);
+            // if(val.t < 0 ) continue;
+            // point reflected = line.dir - val.normal * ( line.dir.dotProduct(val.normal));
+            // reflected.normalize();
+            // point color = this->calcColor(val, line,reflected) * 255;
+            point color = this->colorRecursive(line, this->getConfig().levelOfRecursion) * 255;
 
-            point color = this->calcColor(val, line) * 255;
             image.set_pixel(j, i, color.x, color.y, color.z);
             // double tMinValid = this->intersection(line);
             // if(tMinValid >= 0){
@@ -145,7 +148,7 @@ void RayTracer::generateImage(const CameraConfig &cConfig){
 
 }
 
-point RayTracer::calcColor(const IntersectionReturnVal& val, const Line& line){
+point RayTracer::calcColor(const IntersectionReturnVal& val, const Line& line, const point& reflected){
 
     point intPoint = line.src + line.dir * val.t;
     point toCamera = line.dir * (-1);
@@ -158,8 +161,6 @@ point RayTracer::calcColor(const IntersectionReturnVal& val, const Line& line){
             toSrc.normalize();
             lambert += std::max(0.,val.normal.dotProduct(toSrc));
             if(val.obj->coeffs.w > 0){
-                point reflected = line.dir - val.normal * ( line.dir.dotProduct(val.normal));
-                reflected.normalize();
                 double prod = reflected.dotProduct(toSrc);
                 if(prod > 0){
                     phong += pow( prod, val.obj->shininess);
@@ -172,4 +173,24 @@ point RayTracer::calcColor(const IntersectionReturnVal& val, const Line& line){
     point color = objColor * (coeffs.x + coeffs.y * lambert + coeffs.z * phong);
 
     return color;   
+}
+
+
+point RayTracer::colorRecursive(const Line& line, int level){
+    point color;
+    IntersectionReturnVal val = this->intersection(line);
+    if(val.t < 0){
+        return color;
+    }
+    point reflected = line.dir - val.normal * ( 2 * line.dir.dotProduct(val.normal));
+    reflected.normalize();
+    color = calcColor(val, line, reflected);
+    if(level > 0){
+        point from = line.src + line.dir * val.t + reflected * EPS;
+        Line rLine(from , reflected, true);
+        color = color + colorRecursive(rLine, level - 1) * val.obj->coeffs.w;
+    }
+
+    return color;
+
 }

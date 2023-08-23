@@ -98,7 +98,7 @@ Pyramid::Pyramid(point lp, double w_, double h_, point col, quartet cf, double s
     point topPoint = lowestPoint;
     topPoint.y += h;
     for(int i = 0; i < 4; ++i){
-        surfaces.push_back(new Triangle(cornerPoints[i], cornerPoints[(i+1)%4], topPoint));
+        surfaces.push_back(new Triangle(cornerPoints[(i+1)%4],cornerPoints[i],  topPoint));
     }
     surfaces.push_back(new Quadrilateral(cornerPoints[0], cornerPoints[1], cornerPoints[2], cornerPoints[3]));
 }
@@ -215,7 +215,7 @@ void CheckerBoard::draw(point eyePos){
         glBegin(GL_QUADS);
         for(int i = -10; i < 20; ++i){
             for(int j = 1; j < 50; ++j){
-                if(c){
+                if(!c){
                     glColor3f(0, 0, 0);
                 }
                 else{
@@ -267,8 +267,10 @@ IntersectionReturnVal Pyramid::intersection(const Line &line){
                 normal = *surface->normal;
             }
             else{
-                tValidMin = std::min(tValidMin, tCurr);
-                normal = *surface->normal;
+                if(tValidMin > tCurr){
+                    tValidMin = tCurr;
+                    normal = *surface->normal;
+                }
             }
         }
     }
@@ -287,8 +289,10 @@ IntersectionReturnVal Cube::intersection(const Line &line){
                 normal = *surface->normal;
             }
             else{
-                tValidMin = std::min(tValidMin, tCurr);
-                normal = *surface->normal;
+                if(tValidMin > tCurr){
+                    tValidMin = tCurr;
+                    normal = *surface->normal;
+                }
             }
         }
     }
@@ -303,7 +307,7 @@ IntersectionReturnVal CheckerBoard::intersection(const Line &line){
     }
     double t = -line.src.y / line.dir.y;
     if(t < 0){
-        return {-1};
+    return {-1};
     }
     point normal(0, 1, 0);
     if(line.src.y < 0){
@@ -332,15 +336,15 @@ point CheckerBoard::getColor(const point &p){
     int j = std::abs(p.z) / this->w;
     if(p.x > 0 && p.z > 0 || (p.x < 0 && p.z < 0)){
         if((i + j) % 2 == 0){
-            return {0, 0, 0};
-        }
-        return {1, 1, 1};
-    }
-    else{
-        if((i + j) % 2 == 0){
             return {1, 1, 1};
         }
         return {0, 0, 0};
+    }
+    else{
+        if((i + j) % 2 == 0){
+            return {0, 0, 0};
+        }
+        return {1, 1, 1};
     }
 }
 

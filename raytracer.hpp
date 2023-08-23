@@ -30,11 +30,12 @@ public:
 
     IntersectionReturnVal intersection(const Line& line);
 
-    point colorAtIntersection(const Line& line);
 
     void generateImage(const CameraConfig &cConfig);
 
-    point calcColor(const IntersectionReturnVal& val, const Line&);
+    point calcColor(const IntersectionReturnVal& val, const Line&, const point&);
+
+    point colorRecursive(const Line& line, int level);
 };
 
 #endif

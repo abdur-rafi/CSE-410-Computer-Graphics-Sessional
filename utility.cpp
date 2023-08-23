@@ -75,6 +75,9 @@ Triangle::Triangle(point p1, point p2, point p3){
 
 }
 double Triangle::intersection(const Line &line){
+    // if(line.dir.dotProduct(*normal) > 0){
+    //     return -1;
+    // }
     Determinant3By3 betaD(a - line.src, a - c, line.dir);
     Determinant3By3 gammaD(a - b, a - line.src, line.dir);
     Determinant3By3 tD(a - b, a - c, a - line.src);
@@ -85,7 +88,7 @@ double Triangle::intersection(const Line &line){
     double gamma = gammaD.getVal() / A.getVal();
     // std::cout << beta << " " << gamma << "\n";
     double t = tD.getVal() / A.getVal();
-    if(beta >= 0 && gamma >= 0 && beta + gamma <= 1 && t > 0){
+    if(beta > 0 && gamma > 0 && beta + gamma < 1 && t > 0){
         return t;
     }
     return -1;
