@@ -4,6 +4,11 @@
 #include "utility.hpp"
 #include <fstream>
 #include <vector>
+#include "bitmap_image.hpp"
+
+extern bool useTexture;
+
+
 class RayTracer;
 class Object{
 public:
@@ -71,7 +76,7 @@ public:
 
 class CheckerBoard : public Object{
     double w;
-
+    bitmap_image *textureW, *textureB;
 public:
     CheckerBoard(double w_, quartet cf);
 

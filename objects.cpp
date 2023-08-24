@@ -4,6 +4,8 @@
 #include "lightSource.hpp"
 #include "raytracer.hpp"
 
+
+
 Sphere::Sphere(point cent, double r, point col, quartet cfs, double sh){
 
     center = cent;
@@ -198,6 +200,9 @@ void Cube::draw(point eyePos){
 CheckerBoard::CheckerBoard(double a, quartet cf){
     w = a;
     coeffs = cf;
+    textureW = new bitmap_image("a.bmp");
+    textureB = new bitmap_image("b.bmp");
+
 }
 
 CheckerBoard* CheckerBoard::parseCheckerBoard(std::ifstream &f){
@@ -339,18 +344,50 @@ point Pyramid::getColor(const point &p){
 point CheckerBoard::getColor(const point &p){
     int i = std::abs(p.x) / this->w;
     int j = std::abs(p.y) / this->w;
+    point color;
+    bitmap_image *image;
     if(p.x > 0 && p.y > 0 || (p.x < 0 && p.y < 0)){
         if((i + j) % 2 == 0){
-            return {1, 1, 1};
+            
+            color = {1, 1, 1};
+            image = this->textureW;
         }
-        return {0, 0, 0};
+        else{
+            color = {0, 0, 0};
+            image = this->textureB;
+        }
     }
     else{
         if((i + j) % 2 == 0){
-            return {0, 0, 0};
+            color = {0, 0, 0};
+            image = this->textureB;
+      
         }
-        return {1, 1, 1};
+        else{
+            color = {1, 1, 1};
+            image = this->textureW;
+        
+        }
+        
     }
+
+    if(useTexture){
+        int texture_width = image->width();
+        int texture_height = image->height();
+        int offset_x = std::abs(p.x) - i * this->w;
+        int offset_y = std::abs(p.y) - j * this->w;
+        int x = offset_x * texture_width / this->w;
+        int y = offset_y * texture_height / this->w;
+        unsigned char r, g, b;
+        image->get_pixel(x, y, r, g, b); 
+
+        return  point(r/255.0, g/255.0, b/255.0);
+    }
+
+    return color;
+
+
+    // return color;
 }
 
 // point Sphere::getColor(const Line& line, RayTracer* rt){

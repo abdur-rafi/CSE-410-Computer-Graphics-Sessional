@@ -9,6 +9,8 @@
 #include "raytracer.hpp"
 
 
+bool useTexture = false;
+
 RayTracer *rt;
 /* Initialize OpenGL Graphics */
 void initGL() {
@@ -141,6 +143,11 @@ void keyboard(unsigned char key, int x, int y) {
     case '0':
         rt->generatePointBuffer(cConfig);
         rt->generateImage(cConfig);
+        break;
+    case ' ':
+        useTexture = !useTexture;
+        std::cout << "Texture : " << useTexture << "\n";
+        break;
     default:
         break;
     }

@@ -8,6 +8,7 @@
 #include "lightSource.hpp"
 #include <vector>
 
+
 class RayTracer{
     
     Config config;

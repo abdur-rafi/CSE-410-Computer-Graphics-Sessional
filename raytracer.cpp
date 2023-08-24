@@ -158,12 +158,14 @@ point RayTracer::calcColor(const IntersectionReturnVal& val, const Line& line, c
     for(auto x : this->lights){
         if(!x->inShadow(intPoint, this)){
             point toSrc = x->position - intPoint;
+            double distance = std::sqrt(toSrc.dotProduct(toSrc));
             toSrc.normalize();
-            lambert += std::max(0.,val.normal.dotProduct(toSrc));
+            double scalingFactor = std::exp( -distance * distance * x->fallOfParam );
+            lambert += std::max(0.,val.normal.dotProduct(toSrc)) * scalingFactor;
             if(val.obj->coeffs.w > 0){
                 double prod = reflected.dotProduct(toSrc);
                 if(prod > 0){
-                    phong += pow( prod, val.obj->shininess);
+                    phong += pow( prod, val.obj->shininess) * scalingFactor;
                 }
             }
         }
