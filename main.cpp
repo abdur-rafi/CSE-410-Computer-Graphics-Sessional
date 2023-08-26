@@ -192,7 +192,7 @@ int main(int argc, char** argv) {
     rt = new RayTracer(f);
 
     glutInit(&argc, argv);                      // Initialize GLUT
-    glutInitWindowSize(768, 768);               // Set the window's initial width & height
+    glutInitWindowSize(rt->getConfig().w, rt->getConfig().w);               // Set the window's initial width & height
     glutInitWindowPosition(50, 50);             // Position the window's initial top-left corner
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGB);	//Depth, Double buffer, RGB color
     glutCreateWindow("OpenGL 3D Drawing");      // Create a window with the given title

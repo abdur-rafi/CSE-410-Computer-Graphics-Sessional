@@ -3,6 +3,7 @@
 
 // #include "raytracer.hpp"
 #include "utility.hpp"
+#include "objects.hpp"
 
 class RayTracer;
 
@@ -18,18 +19,21 @@ public:
     LightSource(point p, double f);
     virtual bool inShadow(const point& pt, RayTracer* rt) = 0;
 
+    virtual void draw() = 0;
+
     // void draw() = 0;
 };
 
 
 class NormalLight : public LightSource{
-
+    Sphere* sphere;
 public:
 
     NormalLight(point pos, double fparam);
 
     static NormalLight* parse(std::ifstream &f);
     bool inShadow(const point& pt, RayTracer* rt);
+    void draw();
 };
 
 
@@ -45,6 +49,7 @@ public:
 
     static SpotLight* parse(std::ifstream &f);
     bool inShadow(const point& pt, RayTracer* rt);
+    void draw();
 };
 
 #endif

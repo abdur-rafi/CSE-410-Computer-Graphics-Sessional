@@ -41,6 +41,9 @@ void RayTracer::draw(point eyePos){
     for(auto x : objects){
         x->draw(eyePos);
     }
+    for(auto x : lights){
+        x->draw();
+    }
     if(pointBuffer){
         glColor3f(0, 0, 1);
         glBegin(GL_QUADS);
@@ -181,7 +184,7 @@ point RayTracer::calcColor(const IntersectionReturnVal& val, const Line& line, c
 point RayTracer::colorRecursive(const Line& line, int level){
     point color;
     IntersectionReturnVal val = this->intersection(line);
-    if(val.t < 0){
+    if(val.t < 0 || val.t > config.far){
         return color;
     }
     point reflected = line.dir - val.normal * ( 2 * line.dir.dotProduct(val.normal));
