@@ -213,30 +213,52 @@ CheckerBoard* CheckerBoard::parseCheckerBoard(std::ifstream &f){
 }
 
 void CheckerBoard::draw(point eyePos){
+    point color = this->getColor(eyePos);
+    int x = eyePos.x / this->w;
+    int y = eyePos.y / this->w;
+    if(eyePos.x < 0) --x;
+    if(eyePos.y  < 0) -- y;
+    x *= this->w;
+    y *= this->w;
+    x -= 30 * this->w;
+    y -= 30 * this->w;
+    point black(1, 1, 1);
+    point currColor = black - color;
     int c = 0;
     glPushMatrix();
         // glTranslatef(eyePos.x, 0, eyePos.z);
-        glTranslatef(0, -500, 0);
+        // glTranslatef(0, -500, 0);
         glBegin(GL_QUADS);
-        for(int i = -10; i < 20; ++i){
-            for(int j = 1; j < 50; ++j){
-                if(!c){
-                    glColor3f(0, 0, 0);
-                }
-                else{
-                    glColor3f(1, 1, 1);
-                }
-                c = 1 - c;
-                // glVertex3f((i-1) * w, 0 , (j-1) * w);
-                // glVertex3f((i) * w, 0 , (j-1) * w);
-                // glVertex3f((i) * w, 0 , (j) * w);
-                // glVertex3f((i-1) * w, 0 , (j) * w);
-                glVertex3f((i-1) * w, (j-1) * w, 0);
-                glVertex3f((i) * w, (j-1) * w, 0);
-                glVertex3f((i) * w, (j) * w, 0);
-                glVertex3f((i-1) * w, (j) * w, 0);
+        for(int yi = 0; yi < 60; ++yi){
+            // point currColor = color;
+            for(int xi = 0; xi < 60; ++xi){
+                currColor = black - currColor;
+                glColor3f(currColor.x, currColor.y, currColor.z);
+                glVertex3f(x + xi * w,y + yi * w, 0);
+                glVertex3f(x + (xi+1) * w,y + yi * w, 0);
+                glVertex3f(x + (xi+1) * w,y + (yi+1) * w, 0);
+                glVertex3f(x + xi * w,y + (yi+1) * w, 0);
+
+                
+                // if(!c){
+                //     glColor3f(0, 0, 0);
+                // }
+                // else{
+                //     glColor3f(1, 1, 1);
+                // }
+                // c = 1 - c;
+                // // glVertex3f((i-1) * w, 0 , (j-1) * w);
+                // // glVertex3f((i) * w, 0 , (j-1) * w);
+                // // glVertex3f((i) * w, 0 , (j) * w);
+                // // glVertex3f((i-1) * w, 0 , (j) * w);
+                // glVertex3f((i-1) * w, (j-1) * w, 0);
+                // glVertex3f((i) * w, (j-1) * w, 0);
+                // glVertex3f((i) * w, (j) * w, 0);
+                // glVertex3f((i-1) * w, (j) * w, 0);
 
             }
+            currColor = black - currColor;
+
         }
         
         glEnd();
@@ -346,7 +368,7 @@ point CheckerBoard::getColor(const point &p){
     int j = std::abs(p.y) / this->w;
     point color;
     bitmap_image *image;
-    if(p.x > 0 && p.y > 0 || (p.x < 0 && p.y < 0)){
+    if(p.x >= 0 && p.y >= 0 || (p.x < 0 && p.y < 0)){
         if((i + j) % 2 == 0){
             
             color = {1, 1, 1};

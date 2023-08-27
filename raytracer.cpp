@@ -44,16 +44,16 @@ void RayTracer::draw(point eyePos){
     for(auto x : lights){
         x->draw();
     }
-    if(pointBuffer){
-        glColor3f(0, 0, 1);
-        glBegin(GL_QUADS);
-            glVertex3f(pointBuffer[0][0]->x, pointBuffer[0][0]->y, pointBuffer[0][0]->z);
-            glVertex3f(pointBuffer[0][config.w-1]->x, pointBuffer[0][config.w-1]->y, pointBuffer[0][config.w-1]->z);
-            glVertex3f(pointBuffer[config.w-1][config.w-1]->x, pointBuffer[config.w-1][config.w-1]->y, pointBuffer[config.w-1][config.w-1]->z);
-            glVertex3f(pointBuffer[config.w-1][0]->x, pointBuffer[config.w-1][0]->y, pointBuffer[config.w-1][0]->z);
+    // if(pointBuffer){
+    //     glColor3f(0, 0, 1);
+    //     glBegin(GL_QUADS);
+    //         glVertex3f(pointBuffer[0][0]->x, pointBuffer[0][0]->y, pointBuffer[0][0]->z);
+    //         glVertex3f(pointBuffer[0][config.w-1]->x, pointBuffer[0][config.w-1]->y, pointBuffer[0][config.w-1]->z);
+    //         glVertex3f(pointBuffer[config.w-1][config.w-1]->x, pointBuffer[config.w-1][config.w-1]->y, pointBuffer[config.w-1][config.w-1]->z);
+    //         glVertex3f(pointBuffer[config.w-1][0]->x, pointBuffer[config.w-1][0]->y, pointBuffer[config.w-1][0]->z);
 
-        glEnd();
-    }
+    //     glEnd();
+    // }
 }
 
 
@@ -71,15 +71,6 @@ RayTracer::~RayTracer(){
 }
 
 void RayTracer::generatePointBuffer(const CameraConfig &cConfig){
-    // if(pointBuffer){
-    //     for(int i = 0; i < config.w; ++i){
-    //         for(int j = 0; j < config.w; ++j){
-    //             delete(pointBuffer[i][j]);
-    //         }
-    //         delete[] pointBuffer;
-    //     }
-    //     delete[] pointBuffer;
-    // }
 
     point midPoint = cConfig.eyePos + cConfig.l * config.near;
     double distanceX = 2 * config.near * tan((config.fovY / 2.) * D2R);
@@ -99,7 +90,6 @@ void RayTracer::generatePointBuffer(const CameraConfig &cConfig){
         for(int j = 0; j < config.w; ++j){
             point curr = leftTopCorner - cConfig. u * i * dy + cConfig.r * j * dx;
             pointBuffer[i][j] = new point(curr);
-            // std::cout << pointBuffer[i][j]->x << " " << pointBuffer[i][j]->y << " " << pointBuffer[i][j]->z << "\n" ;
         }
     }
 
@@ -132,23 +122,21 @@ void RayTracer::generateImage(const CameraConfig &cConfig){
 
             point curr = *pointBuffer[i][j];
             Line line(curr, curr - cConfig.eyePos, true);
-            // IntersectionReturnVal val = this->intersection(line);
-            // if(val.t < 0 ) continue;
-            // point reflected = line.dir - val.normal * ( line.dir.dotProduct(val.normal));
-            // reflected.normalize();
-            // point color = this->calcColor(val, line,reflected) * 255;
             point color = this->colorRecursive(line, this->getConfig().levelOfRecursion) * 255;
-
             image.set_pixel(j, i, color.x, color.y, color.z);
-            // double tMinValid = this->intersection(line);
-            // if(tMinValid >= 0){
-            //     point color =
-            //     image.set_pixel(j, i, 255, 255, 255);
-            // }
         }
     }
     image.save_image("test.bmp");
-
+    
+    for(int i = 0; i < config.w; ++i){
+        for(int j = 0; j < config.w; ++j){
+            delete pointBuffer[i][j];
+        }
+    }
+    for(int i = 0; i < config.w; ++i)
+        delete[] pointBuffer[i];
+    
+    delete[] pointBuffer;
 }
 
 point RayTracer::calcColor(const IntersectionReturnVal& val, const Line& line, const point& reflected){
