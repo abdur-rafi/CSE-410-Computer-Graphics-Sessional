@@ -2,10 +2,10 @@
 #define H_RAYTRACER
 
 #include <fstream>
-#include "config.hpp"
-#include "utility.hpp"
-#include "objects.hpp"
-#include "lightSource.hpp"
+#include "1805008_config.hpp"
+#include "1805008_utility.hpp"
+#include "1805008_objects.hpp"
+#include "1805008_lightSource.hpp"
 #include <vector>
 
 

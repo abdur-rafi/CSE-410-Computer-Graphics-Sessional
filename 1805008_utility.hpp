@@ -5,7 +5,7 @@
 #include <fstream>
 
 #define D2R (M_PI / 180.0)
-#define EPS 1e-4;
+#define EPS 1e-3;
 
 class Object;
 

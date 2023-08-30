@@ -1,9 +1,9 @@
 #ifndef H_OBJECTS
 #define H_OBJECTS
 
-#include "utility.hpp"
 #include <fstream>
 #include <vector>
+#include "1805008_utility.hpp"
 #include "bitmap_image.hpp"
 
 extern bool useTexture;

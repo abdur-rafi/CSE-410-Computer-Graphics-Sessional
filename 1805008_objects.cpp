@@ -1,8 +1,8 @@
-#include "objects.hpp"
 #include <cmath>
 #include <iostream>
-#include "lightSource.hpp"
-#include "raytracer.hpp"
+#include "1805008_objects.hpp"
+#include "1805008_lightSource.hpp"
+#include "1805008_raytracer.hpp"
 
 
 
@@ -200,8 +200,8 @@ void Cube::draw(point eyePos){
 CheckerBoard::CheckerBoard(double a, quartet cf){
     w = a;
     coeffs = cf;
-    textureW = new bitmap_image("a.bmp");
-    textureB = new bitmap_image("b.bmp");
+    textureW = new bitmap_image("texture_w.bmp");
+    textureB = new bitmap_image("texture_b.bmp");
 
 }
 
@@ -213,7 +213,10 @@ CheckerBoard* CheckerBoard::parseCheckerBoard(std::ifstream &f){
 }
 
 void CheckerBoard::draw(point eyePos){
+    int t = useTexture;
+    useTexture = 0;
     point color = this->getColor(eyePos);
+    useTexture = t;
     int x = eyePos.x / this->w;
     int y = eyePos.y / this->w;
     if(eyePos.x < 0) --x;
@@ -226,8 +229,6 @@ void CheckerBoard::draw(point eyePos){
     point currColor = black - color;
     int c = 0;
     glPushMatrix();
-        // glTranslatef(eyePos.x, 0, eyePos.z);
-        // glTranslatef(0, -500, 0);
         glBegin(GL_QUADS);
         for(int yi = 0; yi < 60; ++yi){
             // point currColor = color;
@@ -240,21 +241,6 @@ void CheckerBoard::draw(point eyePos){
                 glVertex3f(x + xi * w,y + (yi+1) * w, 0);
 
                 
-                // if(!c){
-                //     glColor3f(0, 0, 0);
-                // }
-                // else{
-                //     glColor3f(1, 1, 1);
-                // }
-                // c = 1 - c;
-                // // glVertex3f((i-1) * w, 0 , (j-1) * w);
-                // // glVertex3f((i) * w, 0 , (j-1) * w);
-                // // glVertex3f((i) * w, 0 , (j) * w);
-                // // glVertex3f((i-1) * w, 0 , (j) * w);
-                // glVertex3f((i-1) * w, (j-1) * w, 0);
-                // glVertex3f((i) * w, (j-1) * w, 0);
-                // glVertex3f((i) * w, (j) * w, 0);
-                // glVertex3f((i-1) * w, (j) * w, 0);
 
             }
             currColor = black - currColor;
@@ -269,7 +255,8 @@ IntersectionReturnVal Sphere::intersection(const Line &line){
     point R0 = this->center - line.src;
     double td = R0.dotProduct(line.dir);
     double r2 = radius * radius;
-    if(td < 0){
+    double eps = EPS;
+    if( R0.dotProduct(R0) > (r2 + eps) && td < 0){
         return {-1};
     }
     double d2 = R0.dotProduct(R0) - td * td;
@@ -364,8 +351,8 @@ point Pyramid::getColor(const point &p){
 
 
 point CheckerBoard::getColor(const point &p){
-    int i = std::abs(p.x) / this->w;
-    int j = std::abs(p.y) / this->w;
+    int i = p.x / this->w;
+    int j = p.y / this->w;
     point color;
     bitmap_image *image;
     if(p.x >= 0 && p.y >= 0 || (p.x < 0 && p.y < 0)){
@@ -396,14 +383,16 @@ point CheckerBoard::getColor(const point &p){
     if(useTexture){
         int texture_width = image->width();
         int texture_height = image->height();
-        int offset_x = std::abs(p.x) - i * this->w;
-        int offset_y = std::abs(p.y) - j * this->w;
+        if(p.x < 0) --i;
+        if(p.y < 0) --j;
+        double offset_x = p.x - i * this->w;
+        double offset_y = p.y - j * this->w;
         int x = offset_x * texture_width / this->w;
         int y = offset_y * texture_height / this->w;
         unsigned char r, g, b;
         image->get_pixel(x, y, r, g, b); 
 
-        return  point(r/255.0, g/255.0, b/255.0);
+        return  point( r/255.0, g/255.0, b/255.0);
     }
 
     return color;

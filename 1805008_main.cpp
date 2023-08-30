@@ -2,11 +2,11 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
-#include "config.hpp"
-#include "objects.hpp"
-#include "utility.hpp"
 #include <fstream>
-#include "raytracer.hpp"
+#include "1805008_config.hpp"
+#include "1805008_objects.hpp"
+#include "1805008_utility.hpp"
+#include "1805008_raytracer.hpp"
 
 
 bool useTexture = false;
@@ -26,7 +26,7 @@ CameraConfig cConfig = {
     {0, 1, 0},
     {1, 0, 0},
     {0, 0, 1},
-    {0, -50, 0}
+    {0, -100, 10}
 };
 
 

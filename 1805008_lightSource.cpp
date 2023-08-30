@@ -1,8 +1,8 @@
-#include "lightSource.hpp"
-#include "raytracer.hpp"
+#include "1805008_lightSource.hpp"
+#include "1805008_raytracer.hpp"
 #include <cmath>
-#include "objects.hpp"
-#include "utility.hpp"
+#include "1805008_objects.hpp"
+#include "1805008_utility.hpp"
 
 LightSource::LightSource(point p, double f){
     this->position = p;

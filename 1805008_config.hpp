@@ -3,7 +3,7 @@
 
 #include <fstream>
 #include <iostream>
-#include "utility.hpp"
+#include "1805008_utility.hpp"
 
 struct Config{
     double near, far;
