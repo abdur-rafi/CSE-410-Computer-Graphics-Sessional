@@ -437,7 +437,6 @@ bool CheckerBoard::loadTexture(){
         if(doesFileExist("texture_w.bmp") == false || doesFileExist("texture_b.bmp") == false){
             textureW = 0;
             textureB = 0;
-            std::cout << "Texture files not found\n";
             return false;
         }
         textureW = new bitmap_image("texture_w.bmp");

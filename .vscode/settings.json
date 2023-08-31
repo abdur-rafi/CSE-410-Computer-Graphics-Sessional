@@ -47,6 +47,9 @@
         "random": "cpp",
         "string": "cpp",
         "string_view": "cpp",
-        "cstring": "cpp"
+        "cstring": "cpp",
+        "chrono": "cpp",
+        "ratio": "cpp",
+        "codecvt": "cpp"
     }
 }
