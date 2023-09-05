@@ -52,11 +52,16 @@ bool NormalLight::inShadow(const point& pt, RayTracer* rt){
 bool SpotLight::inShadow(const point& pt,RayTracer* rt){
 
     point dir = this->position - pt;
+    double d = std::sqrt(dir.dotProduct(dir));
     dir.normalize();
+
     point from = pt + dir * EPS;
+    
     Line line(from, dir, true);
     
-    if(rt->intersection(line).t >= 0){
+    double fd = rt->intersection(line).t;
+    double eps = EPS;
+    if(rt->intersection(line).t >= 0 && fd < d + eps ){
         return true;
     }
 
